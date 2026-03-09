@@ -6,6 +6,19 @@ Analyse de données du catalogue **Discogs** — marché de la musique électron
 
 Chaque ligne du dataset correspond à une **release** au sens Discogs — un pressage ou une version précise d'une œuvre, avec ses métadonnées complètes (label, pays, format, styles, artistes, prix de vente, want/have). Cette granularité fine permet d'aller bien au-delà d'une simple analyse discographique.
 
+## Pourquoi ce sujet ?
+
+Ce projet a été choisi pour travailler sur un cas **réel**, **riche** et **imparfait** — à l'opposé d'un dataset *"propre de cours"*. Discogs impose de vraies contraintes data : hétérogénéité des tags, valeurs manquantes, multiples labels et formats par release, ambiguïtés de métadonnées, granularité très fine des objets.
+
+La particularité de Discogs est que chaque ligne représente une **release** (un pressage physique ou numérique), et non une œuvre abstraite. Cette granularité permet d'analyser simultanément :
+
+- La dynamique des **styles** dans le temps ;
+- Le rôle des **formats** (`Vinyl`, `Digital`, `Cassette`, etc.) ;
+- Les effets de **pays** et de **labels** sur la visibilité et la collectabilité ;
+- La concentration par **artistes** et **master releases**.
+
+L'intérêt métier est de passer d'une lecture qualitative du marché de la musique électronique à une **lecture quantitative et interprétable** : quels signaux font qu'un vinyl devient collectible ? Peut-on les mesurer et les prédire ?
+
 ## Objectifs analytiques
 
 Le projet suit un fil logique en 4 niveaux :
