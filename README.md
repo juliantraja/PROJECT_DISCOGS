@@ -8,6 +8,10 @@ Chaque ligne du dataset correspond à une **release** au sens Discogs — un pre
 
 ## Pourquoi ce sujet ?
 
+La musique électronique n'est pas un genre — c'est un écosystème. Des labels indépendants qui pressent à 300 exemplaires, des vinyls qui s'échangent à 200 € vingt ans après leur sortie, des styles qui émergent dans une ville avant de remodeler un genre entier. C'est un terrain où la culture, l'économie et l'histoire se lisent dans des métadonnées.
+
+Ce projet naît d'une double passion : la musique électronique d'un côté, la data de l'autre — et de l'envie de les faire se parler. Travailler sur Discogs, c'est l'occasion rare d'appliquer des outils de machine learning à un corpus vivant, imparfait et dense de sens.
+
 Ce projet a été choisi pour travailler sur un cas **réel**, **riche** et **imparfait** — à l'opposé d'un dataset *"propre de cours"*. Discogs impose de vraies contraintes data : hétérogénéité des tags, valeurs manquantes, multiples labels et formats par release, ambiguïtés de métadonnées, granularité très fine des objets.
 
 La particularité de Discogs est que chaque ligne représente une **release** (un pressage physique ou numérique), et non une œuvre abstraite. Cette granularité permet d'analyser simultanément :
