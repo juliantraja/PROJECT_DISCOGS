@@ -1,7 +1,39 @@
 # PROJECT_DISCOGS
 
-Analyse de données Discogs — marché de la musique électronique (environ 4,85 millions de sorties).
-Le projet est divisé en 5 parties analytiques : exploration, nettoyage, visualisation, modélisation et enrichissement API.
+Analyse de données du catalogue **Discogs** — marché de la musique électronique.
+
+**Discogs** est la plus grande base de données collaborative de musique physique et numérique au monde. Ce projet exploite son dump XML public (snapshot du 01/02/2026) pour analyser **~4,85 millions de sorties électroniques** : vinyles, CDs, fichiers numériques, cassettes, etc.
+
+Chaque ligne du dataset correspond à une **release** au sens Discogs — un pressage ou une version précise d'une œuvre, avec ses métadonnées complètes (label, pays, format, styles, artistes, prix de vente, want/have). Cette granularité fine permet d'aller bien au-delà d'une simple analyse discographique.
+
+## Objectifs analytiques
+
+Le projet suit un fil logique en 4 niveaux :
+
+| Niveau | Question | Approche |
+| --- | --- | --- |
+| **Comprendre** | Comment le catalogue électronique est-il structuré — dans le temps, par format, pays, label, style, artiste ? | EDA · Visualisation interactive |
+| **Expliquer** | Qu'est-ce qui différencie structurellement le `Vinyl` du `Digital` ? | Classification supervisée · Validation temporelle |
+| **Prédire** | Quels vinyls sont les plus collectibles ? Peut-on prédire leur valeur marchande ? | Régression · Enrichissement API Discogs |
+| **Interpréter** | Quels signaux (rareté, prix, style, label, ancienneté) expliquent la collectabilité ? | SHAP · Interprétabilité ML |
+
+## Livrables attendus
+
+- Une lecture claire de la structure du marché électronique mondial ;
+- Un modèle robuste de séparation `Vinyl` vs `Digital` avec validation temporelle annuelle ;
+- Un modèle de prédiction de la **désirabilité marchande** d'un vinyl (ratio want/have) et de sa **collectabilité** (binaire) à partir des signaux API Discogs ;
+- Une interprétation SHAP des facteurs qui font qu'un vinyl se collecte — rareté, ancienneté, label, prix.
+
+## Structure du notebook
+
+| Partie | Titre | Contenu |
+| --- | --- | --- |
+| **0** | Installation et reproductibilité | Setup, environnement, vérification des versions |
+| **1** | Le cadre | Contexte, questions de recherche, périmètre, limites |
+| **2** | Préparation des données | Chargement, qualité, feature engineering, filtres |
+| **3** | Exploration (EDA) | Visualisations : styles, formats, pays, labels, artistes, décennies |
+| **4** | Modélisation — Vinyl vs Digital | Classification supervisée, validation temporelle, importance des variables |
+| **5** | Modélisation — Collectabilité | Régression + classification, enrichissement API, SHAP |
 
 ---
 
