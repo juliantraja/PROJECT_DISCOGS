@@ -167,6 +167,5 @@ Voir `references/discogs/discogs_data_bootstrap.md` pour le schéma complet et l
 
 ## Notes
 
-- Ne jamais partager ni committer `.env.local` — il contient des clés API privées.
 - `discogs_electronic.pkl` est régénéré automatiquement si absent — inutile de le télécharger si vous avez le CSV.
 - `discogs_api_cache.pkl` (312 Ko) permet de sauter les appels API en Partie 5 — le télécharger pour éviter le rate limiting Discogs.
