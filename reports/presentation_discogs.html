@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Discogs Releases — Classification supervisée</title>
+  <title>Discogs Electronic — Analyse · Modélisation · Collectabilité</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/night.css" />
@@ -163,6 +163,7 @@
       gap: 5px;
       font-size: 0.6em;
       line-height: 1.3;
+      margin: 2px 0;
     }
     .fi-label {
       flex: 0 0 140px;
@@ -220,6 +221,70 @@
       text-align: right;
       margin-top: 4px;
     }
+
+    /* ── Flow diagram for pipeline ── */
+    .flow-step {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.62em; margin: 3px 0;
+    }
+    .flow-box {
+      background: var(--c-panel); border-radius: 5px;
+      padding: 4px 10px; flex-shrink: 0; font-weight: 600; color: #ecf0f1;
+    }
+    .flow-arrow { color: var(--c-gray); font-size: 0.9em; flex-shrink: 0; }
+    .flow-note { color: var(--c-gray); font-size: 0.9em; }
+
+    /* ── Decade stacked bar ── */
+    .decade-row { display: flex; align-items: center; gap: 6px; margin: 3px 0; }
+    .decade-lbl { flex: 0 0 52px; font-size: 0.58em; color: #bdc3c7; text-align: right; }
+    .decade-track { flex: 1; height: 16px; background: var(--c-panel); border-radius: 4px; overflow: hidden; display: flex; }
+    .d-vinyl { background: var(--c-purple); height: 100%; }
+    .d-digital { background: var(--c-green); height: 100%; }
+    .d-cd { background: var(--c-blue); height: 100%; }
+    .decade-note { flex: 0 0 80px; font-size: 0.5em; color: var(--c-gray); }
+
+    /* ── Vinyl case cards ── */
+    .vinyl-cards { display: flex; gap: 10px; flex: 1; min-height: 0; }
+    .vinyl-card {
+      flex: 1; background: var(--c-dark); border-radius: 8px;
+      padding: 10px 12px; display: flex; flex-direction: column; gap: 5px;
+      border-top: 3px solid var(--c-gray);
+    }
+    .vinyl-card.vc-max  { border-color: var(--c-green); }
+    .vinyl-card.vc-med  { border-color: var(--c-yellow); }
+    .vinyl-card.vc-min  { border-color: var(--c-red); }
+    .vc-rank  { font-size: 0.62em; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+    .vc-title { font-size: 0.68em; font-weight: 600; color: #ecf0f1; line-height: 1.3; }
+    .vc-meta  { font-size: 0.58em; color: var(--c-gray); }
+    .vc-ratio { font-size: 1.6em; font-weight: bold; margin: 3px 0 0; }
+    .vc-price { font-size: 0.65em; color: var(--c-yellow); }
+    .vc-shap  { margin-top: auto; font-size: 0.55em; color: #aaa; line-height: 1.6; border-top: 1px solid #2c3e50; padding-top: 5px; }
+    .vc-shap span.up   { color: var(--c-green); }
+    .vc-shap span.down { color: var(--c-red); }
+    .vc-max  .vc-ratio { color: var(--c-green); }
+    .vc-med  .vc-ratio { color: var(--c-yellow); }
+    .vc-min  .vc-ratio { color: var(--c-red); }
+
+    /* ── Big centered number ── */
+    .big-num { font-size: 2.2em; font-weight: bold; color: var(--c-green); }
+    .big-num.warn { color: var(--c-yellow); }
+    .big-num.bad  { color: var(--c-red); }
+
+    /* ── Temporal validation bar (year sequence) ── */
+    .tv-row { display: flex; align-items: center; gap: 5px; margin: 2px 0; }
+    .tv-year { flex: 0 0 38px; font-size: 0.55em; color: #bdc3c7; text-align: right; }
+    .tv-bar-track { flex: 1; height: 12px; background: var(--c-panel); border-radius: 3px; overflow: hidden; }
+    .tv-bar-fill  { height: 100%; border-radius: 3px; }
+    .tv-val { flex: 0 0 36px; font-size: 0.55em; color: #ecf0f1; font-weight: 600; }
+
+    /* ── Geography matrix ── */
+    .geo-matrix { display: grid; grid-template-columns: 70px repeat(4, 1fr); gap: 2px; font-size: 0.56em; }
+    .geo-hdr { color: var(--c-gray); text-align: center; padding: 2px; font-weight: 600; }
+    .geo-country { color: #bdc3c7; font-weight: 600; padding: 2px 4px; }
+    .geo-cell { text-align: center; padding: 3px 2px; border-radius: 3px; }
+    .geo-hi  { background: rgba(155,89,182,0.5); color: #ecf0f1; font-weight: 600; }
+    .geo-mid { background: rgba(155,89,182,0.2); color: #bdc3c7; }
+    .geo-lo  { background: transparent; color: #555; }
   </style>
 </head>
 <body>
@@ -227,162 +292,199 @@
 <div class="slides">
 
 <!-- ══════════════════════════════════════════ SLIDE 1 : TITRE -->
-<section class="title-slide" data-background-gradient="linear-gradient(135deg,#0d1b2a,#1a2a3a)">
+<section class="title-slide" data-background-gradient="linear-gradient(135deg,#0d1b2a,#1e0a2a)">
   <div style="font-size:0.52em;color:var(--c-red);letter-spacing:3px;text-transform:uppercase;margin-bottom:0.6em;">
-    Projet — Data Science &amp; Machine Learning · Le Wagon 2026
+    Projet — Python &amp; Machine Learning · Le Wagon 2026
   </div>
-  <h1>Discogs Releases</h1>
-  <div style="font-size:0.85em;color:var(--c-blue);font-weight:300;margin-bottom:1em;">
-    Classification supervisée à partir des métadonnées musicales
+  <h1>Discogs Electronic</h1>
+  <div style="font-size:0.85em;color:var(--c-blue);font-weight:300;margin-bottom:0.8em;">
+    Analyse · Modélisation · Collectabilité
   </div>
-  <hr style="border-color:#2c3e50;width:55%;margin:0.6em auto;"/>
-  <div style="font-size:0.52em;color:var(--c-gray);line-height:2.1;">
-    <strong style="color:#ecf0f1;">Source</strong> — Discogs XML Dump (fév. 2026, ~17M releases)<br/>
-    <strong style="color:#ecf0f1;">Axes</strong> — Format de distribution · Région géographique<br/>
-    <strong style="color:#ecf0f1;">Modèles</strong> — Logistic Regression · Random Forest
+  <hr style="border-color:#2c3e50;width:55%;margin:0.5em auto;" />
+  <div style="font-size:0.75em;color:#fff;font-style:italic;margin:0.5em 0 0.8em;">
+    "Qu'est-ce qui fait qu'un vinyl vaut de l'or — et peut-on le prédire ?"
+  </div>
+  <div style="font-size:0.50em;color:var(--c-gray);line-height:2.0;">
+    <strong style="color:#ecf0f1;">Source</strong> → Discogs XML Dump (01/02/2026) · ~17M releases → 4,85M Electronic
+    &nbsp;/&nbsp;
+    <strong style="color:#ecf0f1;">Périmètre</strong> → Vinyl + Digital · Styles électroniques<br/>
+    <strong style="color:#ecf0f1;">Pipeline</strong> → EDA · Classification · Régression · SHAP
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════ SLIDE 2 : CONTEXTE -->
+<!-- ══════════════════════════════════════════ SLIDE 2 : MOTIVATION & SUJET -->
 <section>
-  <h2>Contexte &amp; objectifs</h2>
+  <h2>Pourquoi ce sujet ?</h2>
   <div class="slide-body">
-    <div class="hbox">
-      <strong>Discogs</strong> — plus grande BDD de musique physique &amp; numérique au monde.
-      1 ligne = 1 <strong>pressage individuel</strong> (vinyl, CD, fichier…) avec ses métadonnées complètes.
+    <div class="hbox" style="flex-shrink:0;">
+      <strong>Discogs</strong> — encyclopédie mondiale du vinyl physique et numérique. Chaque ligne = un <strong>pressage individuel</strong> (vinyl, CD, fichier numérique…) avec ses métadonnées complètes. Pas une œuvre abstraite — un objet physique précis, avec son label, son pays, ses 300 exemplaires.
     </div>
     <div class="cols">
       <div class="col">
-        <div class="col-title">Dataset</div>
+        <div class="col-title">La musique électronique comme terrain data</div>
         <ul>
-          <li><strong>Source</strong> : dump XML public Discogs (01/02/2026)</li>
-          <li><strong>Volume</strong> : ~17 millions de releases, 45 colonnes</li>
-          <li><strong>Granularité</strong> : 1 ligne = 1 pressage individuel</li>
-          <li><strong>Parsing</strong> : streaming XML → CSV (~17M lignes)</li>
+          <li>La musique électronique n'est pas un genre — c'est un <strong>écosystème</strong>. Des labels qui pressent à 300 exemplaires, des vinyls à 200 € vingt ans après leur sortie.</li>
+          <li>Discogs impose de vraies contraintes data : hétérogénéité des tags, valeurs manquantes, multiples labels par release, granularité très fine.</li>
+          <li>Cas <strong>réel et imparfait</strong> — à l'opposé d'un dataset <em>"propre de cours"</em>.</li>
+          <li>Ce projet naît d'une double passion : la musique électronique d'un côté, la data de l'autre.</li>
         </ul>
-        <div class="hbox green" style="margin-top:auto;">
-          <strong>Cas d'usage</strong> : aider un label à anticiper le format dominant d'une sortie
-          et détecter l'origine géographique d'une release peu documentée.
-        </div>
       </div>
       <div class="col">
-        <div class="col-title">Deux axes de modélisation</div>
-        <table>
-          <tr><th></th><th>Axe 1</th><th>Axe 2</th></tr>
-          <tr><td>Question</td><td>Quel <strong>format</strong> ?</td><td>D'où vient-elle ?</td></tr>
-          <tr><td>Cible</td><td><code>format_category</code></td><td><code>region_a / b</code></td></tr>
-          <tr><td>Classes</td><td>5 (Vinyl, CD…)</td><td>6 (pays ou blocs)</td></tr>
-          <tr><td>Couverture</td><td>~99.8 %</td><td>74–98 %</td></tr>
-        </table>
+        <div class="col-title red">3 questions centrales</div>
+        <div class="hbox green">
+          <strong>1. Structure</strong> — Comment le catalogue électronique est-il organisé dans le temps, par format, pays, label et style ?
+        </div>
+        <div class="hbox yellow" style="margin-top:4px;">
+          <strong>2. Séparation</strong> — Qu'est-ce qui différencie structurellement un vinyl d'une release digitale ? Les métadonnées suffisent-elles ?
+        </div>
+        <div class="hbox" style="margin-top:4px;">
+          <strong>3. Collectabilité</strong> — Quels signaux font qu'un vinyl devient rare et désirable ? Peut-on les mesurer et les prédire ?
+        </div>
       </div>
     </div>
   </div>
   <div class="snum">2 / 10</div>
 </section>
 
-<!-- ══════════════════════════════════════════ SLIDE 3 : DONNÉES -->
+<!-- ══════════════════════════════════════════ SLIDE 3 : PIPELINE DE DONNÉES -->
 <section>
-  <h2>Source de données &amp; extraction</h2>
+  <h2>Source &amp; pipeline de données</h2>
   <div class="slide-body">
     <div class="cols">
       <div class="col">
-        <div class="col-title">Pourquoi le dump XML plutôt que l'API ?</div>
-        <ul>
-          <li>Couverture <strong>exhaustive</strong> (~17M releases vs limites de débit API)</li>
-          <li>Démarche <strong>reproductible</strong> : même snapshot = mêmes résultats</li>
-          <li>Parsing en <strong>mode streaming</strong> sans tout charger en mémoire</li>
-          <li>Export en CSV plat compatible <code>pandas</code></li>
-        </ul>
-        <div class="hbox" style="margin-top:4px;">
-          <strong>Pipeline :</strong> XML.gz → parsing streaming → normalisation (séparateur <code>|</code>) → CSV (17M lignes, 45 col)
+        <div class="col-title">De 17 millions de releases à 4,85M Electronic</div>
+        <div class="flow-step">
+          <div class="flow-box">XML dump Discogs · 01/02/2026</div>
+          <div class="flow-note">~17M releases · 45 colonnes</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-arrow" style="margin-left:8px;">↓</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-box">Filtre genre = Electronic</div>
+          <div class="flow-note">4,85M releases retenues</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-arrow" style="margin-left:8px;">↓</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-box">Parsing streaming (.xml.gz)</div>
+          <div class="flow-note">CSV 3,2 GB · aucune limite RAM</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-arrow" style="margin-left:8px;">↓</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-box">Cache pickle (.pkl)</div>
+          <div class="flow-note">Chargement ~3 s · 23 colonnes utiles</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-arrow" style="margin-left:8px;">↓</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-box">Feature engineering</div>
+          <div class="flow-note">8 variables créées</div>
+        </div>
+        <div class="hbox" style="margin-top:6px;">
+          <strong>Reproductible</strong> : même snapshot = mêmes résultats. Dump XML public → pas de rate limiting, couverture exhaustive.
         </div>
       </div>
       <div class="col">
-        <div class="col-title">Top formats dans le catalogue brut</div>
-        <div class="hbar-row">
-          <div class="hbar-label">Vinyl</div>
-          <div class="hbar-track"><div class="hbar-fill" style="width:80%;background:var(--c-purple);"></div></div>
-          <div class="hbar-val">6.5M</div>
-        </div>
-        <div class="hbar-row">
-          <div class="hbar-label">CD</div>
-          <div class="hbar-track"><div class="hbar-fill" style="width:55%;background:var(--c-blue);"></div></div>
-          <div class="hbar-val">4.1M</div>
-        </div>
-        <div class="hbar-row">
-          <div class="hbar-label">File (Digital)</div>
-          <div class="hbar-track"><div class="hbar-fill" style="width:25%;background:var(--c-green);"></div></div>
-          <div class="hbar-val">1.7M</div>
-        </div>
-        <div class="hbar-row">
-          <div class="hbar-label">Cassette</div>
-          <div class="hbar-track"><div class="hbar-fill" style="width:18%;background:var(--c-orange);"></div></div>
-          <div class="hbar-val">1.2M</div>
-        </div>
-        <div class="hbar-row">
-          <div class="hbar-label">CDr</div>
-          <div class="hbar-track"><div class="hbar-fill" style="width:10%;background:var(--c-gray);"></div></div>
-          <div class="hbar-val">599k</div>
-        </div>
-        <div class="hbar-row">
-          <div class="hbar-label">Shellac</div>
-          <div class="hbar-track"><div class="hbar-fill" style="width:6%;background:var(--c-gray);"></div></div>
-          <div class="hbar-val">326k</div>
-        </div>
-        <p style="color:var(--c-gray);font-size:0.52em;margin-top:4px;">Avant consolidation (CDr→CD, Shellac→Vinyl, 8-Track→Cassette…)</p>
+        <div class="col-title">Variables créées (feature engineering)</div>
+        <table style="font-size:0.58em;">
+          <tr><th>Variable</th><th>Type</th><th>Rôle</th><th>Partie</th></tr>
+          <tr><td><code>style_first</code></td><td>catég.</td><td>Premier style de la release</td><td>2,3,4</td></tr>
+          <tr><td><code>label_first</code></td><td>catég.</td><td>Label principal</td><td>2,3,4</td></tr>
+          <tr><td><code>format_cat</code></td><td>catég.</td><td>Vinyl / Digital / CD…</td><td>2,3,4</td></tr>
+          <tr><td><code>is_vinyl</code></td><td>binaire</td><td>1 si Vinyl</td><td>2,4</td></tr>
+          <tr><td><code>decade</code></td><td>catég.</td><td>Décennie de sortie</td><td>2,3</td></tr>
+          <tr><td><code>is_limited</code></td><td>binaire</td><td>Édition limitée</td><td>2,4</td></tr>
+          <tr><td><code>is_reissue</code></td><td>binaire</td><td>Réédition / Repress</td><td>2,4</td></tr>
+          <tr><td><code>release_type</code></td><td>catég.</td><td>LP / EP / Single / Maxi</td><td>2,4</td></tr>
+        </table>
       </div>
     </div>
   </div>
   <div class="snum">3 / 10</div>
 </section>
 
-<!-- ══════════════════════════════════════════ SLIDE 4 : EDA -->
+<!-- ══════════════════════════════════════════ SLIDE 4 : EDA ÉVOLUTION TEMPORELLE -->
 <section>
-  <h2>Qualité des données — EDA</h2>
+  <h2>EDA — Évolution du catalogue par décennie</h2>
+  <div class="sub-label">Electronic · 4,85M releases · formats et styles dans le temps</div>
   <div class="slide-body">
     <div class="cols">
       <div class="col">
-        <div class="col-title">Valeurs manquantes (clés)</div>
-        <div class="hbar-row">
-          <div class="hbar-label">styles</div>
-          <div class="hbar-track"><div class="hbar-fill" style="width:75%;background:var(--c-red);"></div></div>
-          <div class="hbar-val">15.0 %</div>
+        <div class="col-title">Vinyl vs Digital par décennie</div>
+        <div style="font-size:0.52em;color:#bdc3c7;margin-bottom:4px;flex-shrink:0;">
+          <span style="color:var(--c-purple);">■</span> Vinyl &nbsp;·&nbsp;
+          <span style="color:var(--c-green);">■</span> Digital &nbsp;·&nbsp;
+          <span style="color:var(--c-blue);">■</span> Autres
         </div>
-        <div class="hbar-row">
-          <div class="hbar-label">released_year</div>
-          <div class="hbar-track"><div class="hbar-fill" style="width:62%;background:var(--c-red);"></div></div>
-          <div class="hbar-val">12.5 %</div>
+        <div class="decade-row">
+          <div class="decade-lbl">1980s</div>
+          <div class="decade-track">
+            <div class="d-vinyl"   style="width:90%;"></div>
+            <div class="d-cd"      style="width:8%;"></div>
+            <div class="d-digital" style="width:2%;"></div>
+          </div>
+          <div class="decade-note">Vinyl quasi-exclusif</div>
         </div>
-        <div class="hbar-row">
-          <div class="hbar-label">format_desc.</div>
-          <div class="hbar-track"><div class="hbar-fill" style="width:14%;background:var(--c-yellow);"></div></div>
-          <div class="hbar-val">2.8 %</div>
+        <div class="decade-row">
+          <div class="decade-lbl">1990s</div>
+          <div class="decade-track">
+            <div class="d-vinyl"   style="width:78%;"></div>
+            <div class="d-cd"      style="width:18%;"></div>
+            <div class="d-digital" style="width:4%;"></div>
+          </div>
+          <div class="decade-note">CD en hausse</div>
         </div>
-        <div class="hbar-row">
-          <div class="hbar-label">country</div>
-          <div class="hbar-track"><div class="hbar-fill" style="width:13%;background:var(--c-yellow);"></div></div>
-          <div class="hbar-val">2.7 %</div>
+        <div class="decade-row">
+          <div class="decade-lbl">2000s</div>
+          <div class="decade-track">
+            <div class="d-vinyl"   style="width:42%;"></div>
+            <div class="d-cd"      style="width:35%;"></div>
+            <div class="d-digital" style="width:23%;"></div>
+          </div>
+          <div class="decade-note">⚠ Creux vinyl</div>
         </div>
-        <div class="hbar-row">
-          <div class="hbar-label">genres / IDs</div>
-          <div class="hbar-track"><div class="hbar-fill" style="width:1%;background:var(--c-green);"></div></div>
-          <div class="hbar-val">0.0 %</div>
+        <div class="decade-row">
+          <div class="decade-lbl">2010s</div>
+          <div class="decade-track">
+            <div class="d-vinyl"   style="width:55%;"></div>
+            <div class="d-cd"      style="width:20%;"></div>
+            <div class="d-digital" style="width:25%;"></div>
+          </div>
+          <div class="decade-note">Comeback</div>
         </div>
-        <p style="color:var(--c-gray);font-size:0.52em;margin-top:4px;">15M lignes · 0 doublon · période 1900–2025</p>
+        <div class="decade-row">
+          <div class="decade-lbl">2020s</div>
+          <div class="decade-track">
+            <div class="d-vinyl"   style="width:62%;"></div>
+            <div class="d-cd"      style="width:12%;"></div>
+            <div class="d-digital" style="width:26%;"></div>
+          </div>
+          <div class="decade-note">Re-stratification</div>
+        </div>
+        <div class="hbox red" style="margin-top:5px;">
+          <strong>Creux 2009</strong> : coexistence maximale Vinyl/Digital → moment le plus difficile à séparer pour le modèle (Bal. Acc. 0.704)
+        </div>
+        <div class="hbox green" style="margin-top:4px;">
+          <strong>Depuis 2013</strong> : le marché se re-stratifie. Vinyl = collector/DJ · Digital = distribution grand public.
+        </div>
       </div>
       <div class="col">
-        <div class="col-title">Top genres &amp; pays de pressage</div>
-        <table>
-          <tr><th>Genre</th><th>N</th><th>Pays</th><th>N</th></tr>
-          <tr><td>Rock</td><td>3.2M</td><td>US</td><td>3.6M</td></tr>
-          <tr><td>Electronic</td><td>2.8M</td><td>UK</td><td>1.8M</td></tr>
-          <tr><td>Pop</td><td>1.0M</td><td>Germany</td><td>1.2M</td></tr>
-          <tr><td>Folk / World</td><td>1.0M</td><td>France</td><td>723k</td></tr>
-          <tr><td>Classical</td><td>694k</td><td>Japan</td><td>658k</td></tr>
+        <div class="col-title">Styles dominants par décennie</div>
+        <table style="font-size:0.58em;">
+          <tr><th>Décennie</th><th>Top styles</th></tr>
+          <tr><td>1980s</td><td>Electro, Synth-pop, New Wave</td></tr>
+          <tr><td>1990s</td><td>Techno, House, Jungle, Drum n Bass</td></tr>
+          <tr><td>2000s</td><td>Deep House, Minimal, Progressive Trance</td></tr>
+          <tr><td>2010s</td><td>Techno (revival), Ambient, EDM</td></tr>
+          <tr><td>2020s</td><td>Techno, House, Industrial Techno</td></tr>
         </table>
-        <div class="hbox yellow" style="margin-top:4px;">
-          <strong>Note :</strong> <code>styles</code> manquant pour 15 % des releases
-          → imputation <em>most_frequent</em> dans le pipeline sklearn.
+        <div class="hbox yellow" style="margin-top:6px;">
+          Le <strong>12" single</strong> reste le format physique dominant sur toute la période. L'EP 4 pistes est le standard du club.
         </div>
       </div>
     </div>
@@ -390,126 +492,206 @@
   <div class="snum">4 / 10</div>
 </section>
 
-<!-- ══════════════════════════════════════════ SLIDE 5 : MÉTHODOLOGIE -->
+<!-- ══════════════════════════════════════════ SLIDE 5 : EDA GÉOGRAPHIE & LABELS -->
 <section>
-  <h2>Cadrage méthodologique &amp; pipeline</h2>
+  <h2>EDA — Géographie &amp; empreinte des labels</h2>
   <div class="slide-body">
     <div class="cols">
       <div class="col">
-        <div class="col-title">Pourquoi la classification supervisée ?</div>
-        <ul>
-          <li>Les cibles prennent des <strong>valeurs discrètes &amp; finies</strong> (5 ou 6 classes)</li>
-          <li>On cherche à <em>affecter une catégorie</em>, pas prédire un chiffre continu</li>
-          <li>Métrique : <strong>Balanced Accuracy</strong> — compense le déséquilibre des classes</li>
-        </ul>
-        <div class="col-title" style="margin-top:6px;">Protocole</div>
-        <ul>
-          <li>Split stratifié <strong>80 / 20</strong> (<code>random_state=42</code>)</li>
-          <li>Échantillon de <strong>1M releases</strong> pour l'entraînement</li>
-          <li>Baseline → Logistic Regression → Random Forest</li>
-        </ul>
-        <div class="hbox" style="margin-top:auto;">
-          <strong>Pipeline sklearn</strong> : <code>ColumnTransformer</code> (OHE + imputation médiane)
-          encapsulé dans un <code>Pipeline</code> — pas de data leakage, reproductible.
+        <div class="col-title">Pays × Style (top associations)</div>
+        <div class="geo-matrix">
+          <div class="geo-hdr"></div>
+          <div class="geo-hdr">Techno</div>
+          <div class="geo-hdr">House</div>
+          <div class="geo-hdr">D&amp;B/Jungle</div>
+          <div class="geo-hdr">Ambient</div>
+
+          <div class="geo-country">🇬🇧 UK</div>
+          <div class="geo-cell geo-mid">★★</div>
+          <div class="geo-cell geo-mid">★★</div>
+          <div class="geo-cell geo-hi">★★★</div>
+          <div class="geo-cell geo-mid">★★</div>
+
+          <div class="geo-country">🇩🇪 Germany</div>
+          <div class="geo-cell geo-hi">★★★</div>
+          <div class="geo-cell geo-mid">★★</div>
+          <div class="geo-cell geo-lo">·</div>
+          <div class="geo-cell geo-hi">★★</div>
+
+          <div class="geo-country">🇺🇸 US</div>
+          <div class="geo-cell geo-mid">★★</div>
+          <div class="geo-cell geo-hi">★★★</div>
+          <div class="geo-cell geo-mid">★★</div>
+          <div class="geo-cell geo-lo">·</div>
+
+          <div class="geo-country">🇫🇷 France</div>
+          <div class="geo-cell geo-mid">★★</div>
+          <div class="geo-cell geo-mid">★★</div>
+          <div class="geo-cell geo-lo">·</div>
+          <div class="geo-cell geo-mid">★</div>
+
+          <div class="geo-country">🇷🇺 USSR/RU</div>
+          <div class="geo-cell geo-lo">·</div>
+          <div class="geo-cell geo-lo">·</div>
+          <div class="geo-cell geo-lo">·</div>
+          <div class="geo-cell geo-lo">·</div>
+        </div>
+        <p style="color:var(--c-gray);font-size:0.52em;margin-top:3px;">★★★ = association forte &nbsp;·&nbsp; · = faible présence</p>
+        <div class="hbox" style="margin-top:4px;">
+          <strong>UK → Drum n Bass / Jungle / Garage</strong> · <strong>Allemagne → Techno / Minimal</strong> · <strong>US → House / Deep House</strong> · <strong>URSS/Russie → Vinyl quasi-exclusif</strong> (absence quasi-totale de Digital dans les releases soviétiques)
         </div>
       </div>
       <div class="col">
-        <div class="col-title">Features — Axe 1 (format)</div>
-        <table>
-          <tr><th>Feature</th><th>Type</th><th>Signal</th></tr>
-          <tr><td><code>vinyl_size</code></td><td>catég.</td><td style="color:var(--c-green);">Très élevé</td></tr>
-          <tr><td><code>release_type</code></td><td>catég.</td><td style="color:var(--c-green);">Très élevé</td></tr>
-          <tr><td><code>genres</code></td><td>catég.</td><td style="color:var(--c-yellow);">Élevé</td></tr>
-          <tr><td><code>style_first</code></td><td>catég.</td><td style="color:var(--c-yellow);">Élevé</td></tr>
-          <tr><td><code>track_count</code></td><td>num.</td><td style="color:var(--c-orange);">Moyen</td></tr>
-          <tr><td><code>is_reissue / promo</code></td><td>binaire</td><td style="color:var(--c-gray);">Faible</td></tr>
+        <div class="col-title">Empreinte des grands labels</div>
+        <table style="font-size:0.58em;">
+          <tr><th>Label</th><th>Pays</th><th>Spécialité</th></tr>
+          <tr><td>Warp Records</td><td>UK</td><td>IDM, Electronica, Avant-garde</td></tr>
+          <tr><td>Kompakt</td><td>Allemagne</td><td>Minimal, Techno, Pop Ambiance</td></tr>
+          <tr><td>Ninja Tune</td><td>UK</td><td>Trip-Hop, Broken Beats, Nu-Jazz</td></tr>
+          <tr><td>Tresor</td><td>Allemagne</td><td>Techno industriel, Detroit</td></tr>
+          <tr><td>FFRR</td><td>UK</td><td>House, Garage, Dance</td></tr>
         </table>
+        <div class="hbox green" style="margin-top:6px;">
+          Ces profils sont <strong>détectables automatiquement</strong> dans les données. <code>label_first</code> est la variable la plus discriminante dans le modèle Vinyl vs Digital (Partie 4).
+        </div>
       </div>
     </div>
   </div>
   <div class="snum">5 / 10</div>
 </section>
 
-<!-- ══════════════════════════════════════════ SLIDE 6 : RÉSULTATS FORMAT -->
+<!-- ══════════════════════════════════════════ SLIDE 6 : CLASSIFICATION VINYL VS DIGITAL -->
 <section>
-  <h2>Résultats — Prédiction du format</h2>
-  <p class="sub-label">Tâche : <code>format_category</code> — 5 classes · 1M releases · test = 200k</p>
+  <h2>Classification — Vinyl vs Digital</h2>
+  <div class="sub-label">2,98M releases · 6 features · aucune information directe sur le format physique</div>
   <div class="slide-body">
-    <div class="metric-row">
+    <div class="metric-row" style="flex-shrink:0;">
       <div class="metric-card bad">
-        <div class="val">0.200</div>
-        <div class="lbl">Balanced Acc.<br/>Baseline (majorité)</div>
+        <div class="val">0.500</div>
+        <div class="lbl">Baseline (hasard)<br/>Dummy classifier</div>
       </div>
       <div class="metric-card warn">
-        <div class="val">0.722</div>
-        <div class="lbl">Balanced Acc.<br/>Logistic Regression</div>
+        <div class="val">0.752</div>
+        <div class="lbl">Random Forest<br/>Balanced Accuracy</div>
       </div>
       <div class="metric-card good">
-        <div class="val">0.693</div>
-        <div class="lbl">Balanced Acc.<br/>Random Forest</div>
+        <div class="val">0.832</div>
+        <div class="lbl">★ Logistic Regression<br/>+33 pp au-dessus du hasard</div>
       </div>
     </div>
     <div class="cols">
       <div class="col">
-        <div class="col-title">Comparaison des modèles</div>
-        <table>
-          <tr><th>Modèle</th><th>Accuracy</th><th>Macro-F1</th><th>Bal. Acc.</th></tr>
-          <tr><td>Baseline</td><td>0.470</td><td>0.128</td><td class="cm-lo">0.200</td></tr>
-          <tr><td>Logistic Reg.</td><td>0.769</td><td>0.599</td><td class="cm-hi">0.722</td></tr>
-          <tr><td>Random Forest</td><td>0.740</td><td>0.564</td><td style="color:var(--c-yellow);">0.693</td></tr>
-        </table>
+        <div class="col-title">Validation temporelle (1999–2024)</div>
+        <p style="color:var(--c-gray);font-size:0.52em;margin-bottom:4px;">Balanced Accuracy hors-échantillon · train = toutes années sauf l'année test</p>
+        <div class="tv-row">
+          <div class="tv-year">1999-02</div>
+          <div class="tv-bar-track"><div class="tv-bar-fill" style="width:74%;background:var(--c-green);"></div></div>
+          <div class="tv-val">0.74</div>
+        </div>
+        <div class="tv-row">
+          <div class="tv-year">2003-06</div>
+          <div class="tv-bar-track"><div class="tv-bar-fill" style="width:72%;background:var(--c-green);"></div></div>
+          <div class="tv-val">0.72</div>
+        </div>
+        <div class="tv-row">
+          <div class="tv-year">2007-09</div>
+          <div class="tv-bar-track"><div class="tv-bar-fill" style="width:70%;background:var(--c-yellow);"></div></div>
+          <div class="tv-val">0.70 <span style="color:var(--c-gray);font-size:0.85em;">← creux</span></div>
+        </div>
+        <div class="tv-row">
+          <div class="tv-year">2010-13</div>
+          <div class="tv-bar-track"><div class="tv-bar-fill" style="width:76%;background:var(--c-green);"></div></div>
+          <div class="tv-val">0.76</div>
+        </div>
+        <div class="tv-row">
+          <div class="tv-year">2014-18</div>
+          <div class="tv-bar-track"><div class="tv-bar-fill" style="width:79%;background:var(--c-green);"></div></div>
+          <div class="tv-val">0.79</div>
+        </div>
+        <div class="tv-row">
+          <div class="tv-year">2019-24</div>
+          <div class="tv-bar-track"><div class="tv-bar-fill" style="width:80%;background:var(--c-green);"></div></div>
+          <div class="tv-val">0.80</div>
+        </div>
+        <div class="hbox" style="margin-top:6px;">
+          Signal <strong>stable sur 25 ans</strong> · bande d'incertitude étroite post-2013 · séparation qui se <strong>renforce légèrement</strong> (+0.002/an)
+        </div>
       </div>
       <div class="col">
-        <div class="col-title">Résultats par classe (Random Forest)</div>
-        <table>
-          <tr><th>Classe</th><th>Précision</th><th>Rappel</th><th>F1</th></tr>
-          <tr><td>Vinyl</td><td class="cm-hi">1.00</td><td class="cm-hi">0.93</td><td class="cm-hi">0.96</td></tr>
-          <tr><td>Digital</td><td>0.61</td><td class="cm-hi">0.81</td><td>0.69</td></tr>
-          <tr><td>CD</td><td>0.80</td><td class="cm-mid">0.50</td><td>0.62</td></tr>
-          <tr><td>Cassette</td><td class="cm-lo">0.30</td><td>0.50</td><td class="cm-lo">0.37</td></tr>
-          <tr><td>Video</td><td class="cm-lo">0.10</td><td>0.73</td><td class="cm-lo">0.17</td></tr>
-        </table>
+        <div class="col-title">Variables qui séparent le plus</div>
+        <div class="fi-row">
+          <div class="fi-label">label_first</div>
+          <div class="fi-bar" style="width:110px;background:var(--c-blue);"></div>
+          <div class="fi-val">Signal #1</div>
+        </div>
+        <div class="fi-row">
+          <div class="fi-label">country</div>
+          <div class="fi-bar" style="width:90px;background:var(--c-blue);"></div>
+          <div class="fi-val">Signal #2</div>
+        </div>
+        <div class="fi-row">
+          <div class="fi-label">style_first</div>
+          <div class="fi-bar" style="width:65px;background:var(--c-blue);"></div>
+          <div class="fi-val">Signal #3</div>
+        </div>
+        <div class="fi-row">
+          <div class="fi-label">is_reissue</div>
+          <div class="fi-bar" style="width:40px;background:var(--c-blue);"></div>
+          <div class="fi-val">Signal #4</div>
+        </div>
+        <div class="fi-row">
+          <div class="fi-label">artist_count</div>
+          <div class="fi-bar" style="width:30px;background:var(--c-blue);"></div>
+          <div class="fi-val">Signal #5</div>
+        </div>
+        <div class="fi-row">
+          <div class="fi-label">is_limited</div>
+          <div class="fi-bar" style="width:20px;background:var(--c-blue);"></div>
+          <div class="fi-val">Signal #6</div>
+        </div>
+        <div class="hbox green" style="margin-top:8px;">
+          <strong>CBS, RCA Victor → Vinyl</strong> (labels physiques historiques) · <strong>FSOE, Artist Intelligence Agency → Digital</strong> (labels nés dans l'ère streaming)
+        </div>
       </div>
-    </div>
-    <div class="hbox green">
-      Vinyl très bien classé (F1 = 0.96). Video et Cassette difficiles : classes minoritaires au signal ambigu.
-      La LR surpasse le RF en balanced accuracy — meilleure généralisation sur les classes rares.
     </div>
   </div>
   <div class="snum">6 / 10</div>
 </section>
 
-<!-- ══════════════════════════════════════════ SLIDE 7 : FEATURE IMPORTANCES -->
+<!-- ══════════════════════════════════════════ SLIDE 7 : ENRICHISSEMENT API DISCOGS -->
 <section>
-  <h2>Interprétation — Feature importances (RF)</h2>
+  <h2>Enrichissement — API Discogs</h2>
+  <div class="sub-label">Partie 5 · collecte des signaux marchands sur 2 139 vinyls ciblés</div>
   <div class="slide-body">
     <div class="cols">
       <div class="col">
-        <div class="col-title">Top 10 variables</div>
-        <div class="fi-row"><span class="fi-label">vinyl_size_Unknown</span><div class="fi-bar" style="width:110px;"></div><span class="fi-val">12.1 %</span></div>
-        <div class="fi-row"><span class="fi-label">has_vinyl_size</span><div class="fi-bar" style="width:95px;"></div><span class="fi-val">10.5 %</span></div>
-        <div class="fi-row"><span class="fi-label">vinyl_size_7"</span><div class="fi-bar" style="width:72px;"></div><span class="fi-val">7.8 %</span></div>
-        <div class="fi-row"><span class="fi-label">release_type_LP</span><div class="fi-bar" style="width:68px;"></div><span class="fi-val">7.4 %</span></div>
-        <div class="fi-row"><span class="fi-label">genres_Electronic</span><div class="fi-bar" style="width:67px;"></div><span class="fi-val">7.3 %</span></div>
-        <div class="fi-row"><span class="fi-label">release_type_Album</span><div class="fi-bar" style="width:62px;"></div><span class="fi-val">6.7 %</span></div>
-        <div class="fi-row"><span class="fi-label">release_type_Unknown</span><div class="fi-bar" style="width:58px;"></div><span class="fi-val">6.4 %</span></div>
-        <div class="fi-row"><span class="fi-label">track_count</span><div class="fi-bar" style="width:58px;"></div><span class="fi-val">6.4 %</span></div>
-        <div class="fi-row"><span class="fi-label">vinyl_size_12"</span><div class="fi-bar" style="width:36px;"></div><span class="fi-val">3.9 %</span></div>
-        <div class="fi-row"><span class="fi-label">release_type_EP</span><div class="fi-bar" style="width:16px;"></div><span class="fi-val">1.8 %</span></div>
+        <div class="col-title">Pourquoi l'API ?</div>
+        <ul>
+          <li>Le dump CSV ne contient pas les signaux marchands en temps réel : <code>want</code>, <code>have</code>, prix de revente.</li>
+          <li>L'API Discogs permet d'interroger chaque release individuellement pour récupérer ces données.</li>
+          <li>Ces signaux sont le <strong>cœur de la modélisation de collectabilité</strong>.</li>
+        </ul>
+        <div class="col-title" style="margin-top:8px;">Contraintes techniques traitées</div>
+        <ul>
+          <li><strong>Rate limiting</strong> : 1 requête / seconde (respect des CGU Discogs)</li>
+          <li><strong>Cache <code>.pkl</code> résumable</strong> : interruption possible, reprise automatique</li>
+          <li><code>ThreadPoolExecutor</code> : collecte séquentielle avec timeout</li>
+          <li><strong>Sauvegarde d'urgence</strong> : <code>signal</code> + <code>atexit</code> → aucune donnée perdue</li>
+        </ul>
       </div>
       <div class="col">
-        <div class="col-title">Interprétations clés</div>
-        <ul>
-          <li><code>vinyl_size</code> + <code>has_vinyl_size</code> = <strong>~23 %</strong> → la taille physique est le signal le plus discriminant</li>
-          <li><code>release_type=LP</code> → Vinyl ou CD quasi certain</li>
-          <li><code>vinyl_size=Unknown</code> + <code>release_type=Unknown</code> → souvent Digital</li>
-          <li><code>genres=Electronic</code> → fort signal Vinyl (marché historique)</li>
-          <li><code>track_count</code> joue : EP (&lt;6 pistes) vs LP (≥8 pistes)</li>
-        </ul>
-        <div class="hbox" style="margin-top:auto;">
-          <strong>Exemple :</strong><br/>
-          <code>LP</code> + <code>Electronic</code> + <code>Deep House</code> + <code>UK</code> → <strong>Vinyl</strong><br/>
-          <code>Unknown</code> + <code>Electronic</code> + pas de taille physique → <strong>Digital</strong>
+        <div class="col-title">Données collectées par release</div>
+        <table style="font-size:0.57em;">
+          <tr><th>Champ API</th><th>Description</th><th>Rôle</th></tr>
+          <tr><td><code>have</code></td><td>Nb de possesseurs sur Discogs</td><td>Popularité</td></tr>
+          <tr><td><code>want</code></td><td>Nb de personnes qui le veulent</td><td>Désirabilité brute</td></tr>
+          <tr><td><code>want_have_ratio</code></td><td>want ÷ have</td><td><strong>Variable cible</strong></td></tr>
+          <tr><td><code>lowest_price</code></td><td>Prix min actuel en vente</td><td>Signal de rareté</td></tr>
+          <tr><td><code>rating_avg</code></td><td>Note moyenne communautaire</td><td>Qualité perçue</td></tr>
+          <tr><td><code>num_for_sale</code></td><td>Nb d'exemplaires en vente</td><td>Offre marché</td></tr>
+        </table>
+        <div class="hbox yellow" style="margin-top:8px;">
+          <strong>2 139 releases</strong> enrichies · sous-ensemble ciblé de labels vinyl Electronic. <code>log_scarcity = log(1 + want/have)</code> · <code>is_collectible</code> = 1 si ratio &gt; seuil médian.
         </div>
       </div>
     </div>
@@ -517,106 +699,141 @@
   <div class="snum">7 / 10</div>
 </section>
 
-<!-- ══════════════════════════════════════════ SLIDE 8 : GÉO -->
+<!-- ══════════════════════════════════════════ SLIDE 8 : MODÉLISATION COLLECTABILITÉ -->
 <section>
-  <h2>Extension — Prédiction géographique</h2>
-  <p class="sub-label">Axe 2 : prédire l'origine d'une release <em>sans utiliser le champ <code>country</code></em></p>
+  <h2>Modélisation — Prédire la collectabilité</h2>
+  <div class="sub-label">2 139 releases · CV 5-fold · variables : log_scarcity, label_avg_ratio, age, log_price_nm, rating_avg</div>
   <div class="slide-body">
     <div class="cols">
       <div class="col">
-        <div class="col-title">Deux angles de prédiction</div>
-        <table>
-          <tr><th></th><th>Angle A</th><th>Angle B</th></tr>
-          <tr><td>Cible</td><td>Marchés nationaux</td><td>Blocs culturels</td></tr>
-          <tr><td>Classes</td><td>UK/US/Germany/France/Japan/Intl</td><td>Anglophone/Germanique/Latine/EE/Asie/Intl</td></tr>
-          <tr><td>Couverture</td><td>~736k releases</td><td>~982k releases</td></tr>
+        <div class="col-title">Régression — want_have_ratio</div>
+        <table style="font-size:0.57em;">
+          <tr><th>Modèle</th><th>R²</th><th>MAE</th><th>RMSE</th></tr>
+          <tr><td>Ridge (baseline)</td><td class="cm-lo">0.415</td><td>0.833</td><td>1.477</td></tr>
+          <tr><td>★ RandomForest</td><td class="cm-hi">0.674</td><td>0.519</td><td>1.099</td></tr>
+          <tr><td>GradientBoosting</td><td>0.643</td><td>0.548</td><td>1.154</td></tr>
         </table>
-        <div class="hbox yellow" style="margin-top:6px;">
-          <strong>Hypothèse :</strong> les blocs culturels (Angle B) sont plus séparables — ils partagent des traits musicaux cohérents. Le signal géo est structurellement plus faible que le signal de format.
+        <div class="metric-row" style="margin-top:6px;">
+          <div class="metric-card good">
+            <div class="val">0.674</div>
+            <div class="lbl">R² RandomForest<br/>67% variance expliquée</div>
+          </div>
+          <div class="metric-card bad">
+            <div class="val">0.415</div>
+            <div class="lbl">R² Ridge baseline<br/>régression linéaire insuffisante</div>
+          </div>
+        </div>
+        <div class="hbox green" style="margin-top:6px;">
+          Le <strong>RandomForest capture les interactions non-linéaires</strong> : ancienneté × rareté × label ne s'additionnent pas — ils se multiplient. La régression linéaire ne peut pas modéliser ça.
         </div>
       </div>
       <div class="col">
-        <div class="col-title">Features &amp; signaux géographiques attendus</div>
-        <ul>
-          <li>Mêmes features qu'Axe 1, <strong>sauf</strong> <code>country</code> (c'est la cible)</li>
-          <li><code>format_category</code> + <code>decade</code> ajoutés (signal temporel fort)</li>
-        </ul>
-        <div class="col-title" style="margin-top:6px;">Exemples concrets</div>
-        <ul>
-          <li><code>Electronic</code> + <code>1990s</code> + <code>Vinyl</code> → <strong>UK / Anglophone</strong></li>
-          <li><code>J-Pop</code> + <code>CD</code> + <code>2000s</code> → <strong>Asie</strong></li>
-          <li><code>Schlager</code> + <code>1970s</code> → <strong>Germanique</strong></li>
-          <li><code>CD</code> + <code>1990s</code> → <strong>Japan</strong> (boom CD 90s)</li>
-        </ul>
+        <div class="col-title">Classification — is_collectible</div>
+        <table style="font-size:0.57em;">
+          <tr><th>Modèle</th><th>Bal. Acc.</th><th>F1</th><th>ROC-AUC</th></tr>
+          <tr><td>RidgeClf</td><td>0.781</td><td>0.771</td><td>0.855</td></tr>
+          <tr><td>RandomForest</td><td>0.838</td><td>0.836</td><td>0.921</td></tr>
+          <tr><td>★ GradientBoosting</td><td class="cm-hi">0.844</td><td>0.844</td><td class="cm-hi">0.921</td></tr>
+        </table>
+        <div class="metric-row" style="margin-top:6px;">
+          <div class="metric-card good">
+            <div class="val">0.921</div>
+            <div class="lbl">ROC-AUC GradientBoosting<br/>sur 2 classes</div>
+          </div>
+          <div class="metric-card good">
+            <div class="val">0.844</div>
+            <div class="lbl">Balanced Accuracy<br/>+6 pp vs RF</div>
+          </div>
+        </div>
+        <div class="hbox green" style="margin-top:6px;">
+          ROC-AUC = <strong>0.921</strong> : si l'on prend un vinyl collectible et un non-collectible au hasard, le modèle les distingue correctement <strong>9 fois sur 10</strong>.
+        </div>
       </div>
     </div>
   </div>
   <div class="snum">8 / 10</div>
 </section>
 
-<!-- ══════════════════════════════════════════ SLIDE 9 : LIMITES -->
+<!-- ══════════════════════════════════════════ SLIDE 9 : SHAP -->
 <section>
-  <h2>Limites &amp; points de vigilance</h2>
+  <h2>Interprétabilité SHAP — Déconstruire chaque prédiction</h2>
+  <div class="sub-label">TreeExplainer · RandomForestRegressor · 3 cas du corpus</div>
   <div class="slide-body">
-    <div class="cols">
-      <div class="col">
-        <div class="col-title red">Axe 1 — Format</div>
-        <ul>
-          <li><strong>Snapshot catalogue</strong> : photo à une date, pas d'évolution en temps réel</li>
-          <li><strong>Déséquilibre de classes</strong> : Vinyl ~47 % vs Video ~1 % → classes minoritaires mal prédites</li>
-          <li><strong>Signal quasi-circulaire</strong> : <code>vinyl_size</code> / <code>release_type</code> extraits du même champ source que la cible</li>
-          <li><strong>Simplification multi-label</strong> : seul le 1er style est utilisé</li>
-          <li><strong>Format "Autre" exclu</strong> : Box Set, All Media (&lt;0.3 % du catalogue)</li>
-        </ul>
-      </div>
-      <div class="col">
-        <div class="col-title red">Axe 2 — Géographie</div>
-        <ul>
-          <li><strong>Signal faible par construction</strong> : inférer l'origine sans <code>country</code> est une contrainte forte</li>
-          <li><strong>Blocs subjectifs</strong> : Belgique, Suisse… à la frontière de deux blocs</li>
-          <li><strong>Pays rares exclus</strong> : Angle A exclut ~26 % du catalogue</li>
-          <li><strong>Classe "International" hétérogène</strong> : Europe, Benelux, Worldwide → fourre-tout</li>
-          <li><strong>Doublons de master</strong> : une œuvre = potentiellement des dizaines de lignes</li>
-        </ul>
-      </div>
+    <div class="hbox" style="flex-shrink:0;">
+      Les <strong>SHAP values</strong> décomposent chaque prédiction : <em>"Pourquoi ce vinyl est-il prédit désirable ?"</em> Les deux facteurs qui dominent : <strong><code>log_scarcity</code></strong> (rareté brute — peu d'exemplaires disponibles vs nb de possesseurs) · <strong><code>label_avg_ratio</code></strong> (réputation du label — si le label produit systématiquement des objets désirables, le halo se propage à chaque nouvelle release).
     </div>
-    <div class="hbox red">
-      Ces limites sont connues et documentées. Elles bornent la portée des résultats
-      et ouvrent des axes d'amélioration concrets.
+    <div class="vinyl-cards">
+      <div class="vinyl-card vc-max">
+        <div class="vc-rank" style="color:var(--c-green);">🔺 Maximum du corpus</div>
+        <div class="vc-title">Baby Pop — <em>Minimal Structures</em></div>
+        <div class="vc-meta">Tetrode Music · 1996</div>
+        <div class="vc-ratio">29.26</div>
+        <div class="vc-price">178 € · Near Mint</div>
+        <div class="vc-shap">
+          log_scarcity <span class="up">▲▲▲ très fort</span><br/>
+          label_avg_ratio <span class="up">▲▲ fort</span><br/>
+          age (1996) <span class="up">▲▲ fort</span><br/>
+          Pressing confidentiel, jamais réédité, label de niche reconnu.
+        </div>
+      </div>
+      <div class="vinyl-card vc-med">
+        <div class="vc-rank" style="color:var(--c-yellow);">➖ Médiane du corpus</div>
+        <div class="vc-title">Martinez — <em>Skywalker EP</em></div>
+        <div class="vc-meta">Dessous Recordings · 2003</div>
+        <div class="vc-ratio">0.81</div>
+        <div class="vc-price">22 € · Very Good+</div>
+        <div class="vc-shap">
+          log_scarcity <span>→ neutre</span><br/>
+          label_avg_ratio <span>→ neutre</span><br/>
+          age (2003) <span>→ neutre</span><br/>
+          Label sérieux, catalogue conséquent. Aucun signal fort dans un sens ou dans l'autre.
+        </div>
+      </div>
+      <div class="vinyl-card vc-min">
+        <div class="vc-rank" style="color:var(--c-red);">🔻 Minimum du corpus</div>
+        <div class="vc-title">Schneider &amp; Aera — <em>Taylor &amp; Smith EP</em></div>
+        <div class="vc-meta">Circus Company · 2011</div>
+        <div class="vc-ratio">0.00</div>
+        <div class="vc-price">6 € · Good</div>
+        <div class="vc-shap">
+          log_scarcity <span class="down">▼▼ faible</span><br/>
+          label_avg_ratio <span class="down">▼ faible</span><br/>
+          age (2011) <span class="down">▼ récent</span><br/>
+          Beaucoup de copies disponibles, label sans réputation de collectabilité, release récente.
+        </div>
+      </div>
     </div>
   </div>
   <div class="snum">9 / 10</div>
 </section>
 
-<!-- ══════════════════════════════════════════ SLIDE 10 : NEXT STEPS -->
+<!-- ══════════════════════════════════════════ SLIDE 10 : SYNTHÈSE & LIMITES -->
 <section>
-  <h2>Prochaines étapes</h2>
+  <h2>Synthèse — 3 réponses, 3 questions</h2>
   <div class="slide-body">
     <div class="cols">
       <div class="col">
-        <div class="col-title">Modélisation</div>
-        <ul>
-          <li>Comparer avec <strong>XGBoost / LightGBM</strong> pour les classes minoritaires</li>
-          <li>Encodage <strong>multi-label</strong> pour <code>genres</code> et <code>styles</code> (TF-IDF)</li>
-          <li>Ajouter <code>label_names</code> comme feature (certains labels = format exclusif)</li>
-        </ul>
-        <div class="col-title" style="margin-top:6px;">Pipeline &amp; données</div>
-        <ul>
-          <li><strong>Validation temporelle</strong> : entraîner sur &lt;2020, tester sur ≥2020</li>
-          <li>Intégrer les données <strong>communautaires</strong> Discogs (<code>community_want</code>)</li>
-          <li>Déduplication par master pour réduire les biais de sur-représentation</li>
-        </ul>
-      </div>
-      <div class="col" style="justify-content:center; align-items:center; text-align:center; gap:16px;">
-        <div class="hbox green" style="text-align:left; align-self:stretch;">
-          <strong>Takeaway :</strong> les métadonnées musicales de Discogs portent un signal prédictif
-          clair sur le format de distribution (Balanced Acc. 0.72 vs 0.20 baseline).
-          La prédiction géographique reste un défi ouvert et stimulant.
+        <div class="col-title">Ce que les données nous ont appris</div>
+        <div class="hbox green">
+          <strong>1 — Structure du catalogue</strong> · Les patterns culturels sont robustes et mesurables : UK/Drum n Bass, Allemagne/Techno, comeback vinyl 2010s sont visibles dans 4,85M de lignes. Les données confirment l'histoire.
         </div>
-        <div>
-          <span class="badge b-purple">Vinyl · CD · Digital · Cassette · Video</span><br/>
-          <span class="badge b-blue" style="margin-top:4px;">UK · US · Germany · France · Japan</span><br/>
-          <span class="badge b-green" style="margin-top:4px;">sklearn · pandas · plotly</span>
+        <div class="hbox yellow" style="margin-top:6px;">
+          <strong>2 — Vinyl vs Digital</strong> · La séparation est structurelle, stable sur 25 ans, portée par le <strong>label et le pays</strong>. Sans connaître le format, un modèle le prédit à <strong>83% de précision</strong>.
+        </div>
+        <div class="hbox" style="margin-top:6px;">
+          <strong>3 — Collectabilité</strong> · <strong>67% de la variance</strong> expliquée · <strong>ROC-AUC 0.921</strong>. La rareté × la réputation du label × l'ancienneté ne s'additionnent pas — elles se multiplient. Baby Pop (178 €, ratio 29) vs Taylor &amp; Smith (6 €, ratio 0) — le modèle le voit.
+        </div>
+      </div>
+      <div class="col">
+        <div class="col-title">Limites à garder en tête</div>
+        <ul>
+          <li><strong>Enrichissement partiel</strong> : 2 139 releases sur 4,85M → conclusions solides sur ce sous-ensemble, généralisation prudente.</li>
+          <li><strong>Snapshot</strong> : want/have évolue en permanence — une release peut devenir culte du jour au lendemain.</li>
+          <li><strong><code>style_first</code> seulement</strong> : la nuance multi-style est perdue (une release peut appartenir à 5 styles).</li>
+          <li><strong>Biais de sélection</strong> : les labels ciblés en Partie 5 ne représentent pas tout le catalogue.</li>
+        </ul>
+        <div class="hbox red" style="margin-top:auto;">
+          Ces limites <strong>bornent</strong> les résultats mais ne les invalident pas. Elles ouvrent des axes d'amélioration concrets : plus d'enrichissement API · validation temporelle Partie 5 · TF-IDF multi-label.
         </div>
       </div>
     </div>
@@ -624,108 +841,135 @@
   <div class="snum">10 / 10</div>
 </section>
 
-<!-- ══════════════════════════════════════════ BACKUP 1 : DISTRIBUTION FORMATS -->
+<!-- ══════════════════════════════════════════ BACKUP 1 : LEXIQUE VARIABLES -->
 <section>
-  <h2 style="color:var(--c-gray);">Backup — Distribution formats (catalogue complet)</h2>
+  <h2 style="color:var(--c-gray);">Backup — Lexique des variables dérivées</h2>
   <div class="slide-body">
-    <div class="cols">
-      <div class="col">
-        <table>
-          <tr><th>Catégorie</th><th>Releases</th><th>%</th></tr>
-          <tr><td>Vinyl</td><td>7.0M</td><td class="cm-hi">46.8 %</td></tr>
-          <tr><td>CD</td><td>4.8M</td><td>32.3 %</td></tr>
-          <tr><td>Digital</td><td>1.7M</td><td>11.6 %</td></tr>
-          <tr><td>Cassette</td><td>1.2M</td><td>8.2 %</td></tr>
-          <tr><td>Video</td><td>138k</td><td class="cm-lo">0.9 %</td></tr>
-          <tr><td>Autre (exclu)</td><td>27k</td><td class="cm-zero">0.2 %</td></tr>
-        </table>
-        <p style="color:var(--c-gray);font-size:0.52em;margin-top:6px;">
-          Après consolidation FORMAT_MAP (CDr→CD, Shellac→Vinyl, 8-Track→Cassette, DVD/VHS→Video).
-          Réduction "Autre" : 1.65M → 27k (−96 %).
-        </p>
-      </div>
-      <div class="col">
-        <div class="hbar-row">
-          <div class="hbar-label">Vinyl</div>
-          <div class="hbar-track"><div class="hbar-fill" style="width:47%;background:var(--c-purple);"></div></div>
-          <div class="hbar-val">47 %</div>
-        </div>
-        <div class="hbar-row">
-          <div class="hbar-label">CD</div>
-          <div class="hbar-track"><div class="hbar-fill" style="width:32%;background:var(--c-blue);"></div></div>
-          <div class="hbar-val">32 %</div>
-        </div>
-        <div class="hbar-row">
-          <div class="hbar-label">Digital</div>
-          <div class="hbar-track"><div class="hbar-fill" style="width:12%;background:var(--c-green);"></div></div>
-          <div class="hbar-val">12 %</div>
-        </div>
-        <div class="hbar-row">
-          <div class="hbar-label">Cassette</div>
-          <div class="hbar-track"><div class="hbar-fill" style="width:8%;background:var(--c-orange);"></div></div>
-          <div class="hbar-val">8 %</div>
-        </div>
-        <div class="hbar-row">
-          <div class="hbar-label">Video</div>
-          <div class="hbar-track"><div class="hbar-fill" style="width:1%;background:var(--c-red);min-width:6px;"></div></div>
-          <div class="hbar-val">1 %</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ══════════════════════════════════════════ BACKUP 2 : VARIABLES DÉRIVÉES -->
-<section>
-  <h2 style="color:var(--c-gray);">Backup — Variables dérivées</h2>
-  <div class="slide-body">
-    <table>
-      <tr><th>Variable</th><th>Source</th><th>Description</th></tr>
-      <tr><td><code>style_count</code></td><td><code>styles</code></td><td>Nombre de styles détectés</td></tr>
-      <tr><td><code>style_first</code></td><td><code>styles</code></td><td>Premier style (réduit la cardinalité)</td></tr>
-      <tr><td><code>format_category</code></td><td><code>format_names</code></td><td>Catégorie format — 5 classes (cible Axe 1)</td></tr>
-      <tr><td><code>release_type</code></td><td><code>format_descriptions</code></td><td>LP / EP / Single / Compilation / Maxi-Single…</td></tr>
-      <tr><td><code>vinyl_size</code></td><td><code>format_descriptions</code></td><td>12" / 7" / 10" / Unknown</td></tr>
-      <tr><td><code>has_vinyl_size</code></td><td><code>vinyl_size</code></td><td>1 si taille renseignée (quasi exclusivement Vinyl)</td></tr>
-      <tr><td><code>is_limited</code></td><td><code>format_descriptions</code></td><td>1 si Limited Edition</td></tr>
-      <tr><td><code>is_promo</code></td><td><code>format_descriptions</code></td><td>1 si copie promotionnelle</td></tr>
-      <tr><td><code>is_reissue</code></td><td><code>format_descriptions</code></td><td>1 si Reissue ou Repress</td></tr>
-      <tr><td><code>decade</code></td><td><code>released_year</code></td><td>1980s, 1990s, 2000s…</td></tr>
-      <tr><td><code>region_a</code></td><td><code>country</code></td><td>Top 5 marchés nationaux + International</td></tr>
-      <tr><td><code>region_b</code></td><td><code>country</code></td><td>Blocs culturels + International</td></tr>
+    <table style="font-size:0.58em;">
+      <tr><th>Variable</th><th>Source</th><th>Description</th><th>Type</th></tr>
+      <tr><td><code>style_first</code></td><td><code>styles</code></td><td>Premier style de la release</td><td>catég.</td></tr>
+      <tr><td><code>label_first</code></td><td><code>labels</code></td><td>Label principal (pipe-séparé)</td><td>catég.</td></tr>
+      <tr><td><code>format_cat</code></td><td><code>format_names</code></td><td>Vinyl / Digital / CD / Cassette / Autre</td><td>catég.</td></tr>
+      <tr><td><code>is_vinyl</code></td><td><code>format_cat</code></td><td>1 si Vinyl</td><td>binaire</td></tr>
+      <tr><td><code>decade</code></td><td><code>released_year</code></td><td>Décennie (1980s, 1990s…)</td><td>catég.</td></tr>
+      <tr><td><code>is_limited</code></td><td><code>format_descriptions</code></td><td>1 si "Limited Edition"</td><td>binaire</td></tr>
+      <tr><td><code>is_reissue</code></td><td><code>format_descriptions</code></td><td>1 si "Reissue" ou "Repress"</td><td>binaire</td></tr>
+      <tr><td><code>release_type</code></td><td><code>format_descriptions</code></td><td>LP / EP / Single / Compilation</td><td>catég.</td></tr>
+      <tr><td><code>want_have_ratio</code></td><td>API <code>want ÷ have</code></td><td>Proxy désirabilité marchande</td><td>continu</td></tr>
+      <tr><td><code>log_scarcity</code></td><td><code>log(1 + want/have)</code></td><td>Rareté log-transformée</td><td>continu</td></tr>
+      <tr><td><code>label_avg_ratio</code></td><td>API + groupby label</td><td>Réputation moyenne du label</td><td>continu</td></tr>
+      <tr><td><code>is_collectible</code></td><td><code>want_have_ratio &gt; médian</code></td><td>Cible binaire collectabilité</td><td>binaire</td></tr>
     </table>
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════ BACKUP 3 : DISTRIBUTION GÉO -->
+<!-- ══════════════════════════════════════════ BACKUP 2 : CHOIX DES MODÈLES -->
 <section>
-  <h2 style="color:var(--c-gray);">Backup — Distribution géographique</h2>
+  <h2 style="color:var(--c-gray);">Backup — Choix des modèles : le raisonnement</h2>
   <div class="slide-body">
     <div class="cols">
       <div class="col">
-        <div class="col-title">Angle A — Top 5 marchés nationaux</div>
-        <div class="hbar-row"><div class="hbar-label">US</div><div class="hbar-track"><div class="hbar-fill" style="width:100%;background:var(--c-blue);"></div></div><div class="hbar-val">3.6M</div></div>
-        <div class="hbar-row"><div class="hbar-label">UK</div><div class="hbar-track"><div class="hbar-fill" style="width:50%;background:var(--c-blue);"></div></div><div class="hbar-val">1.8M</div></div>
-        <div class="hbar-row"><div class="hbar-label">Germany</div><div class="hbar-track"><div class="hbar-fill" style="width:34%;background:var(--c-blue);"></div></div><div class="hbar-val">1.2M</div></div>
-        <div class="hbar-row"><div class="hbar-label">France</div><div class="hbar-track"><div class="hbar-fill" style="width:20%;background:var(--c-blue);"></div></div><div class="hbar-val">723k</div></div>
-        <div class="hbar-row"><div class="hbar-label">Intl</div><div class="hbar-track"><div class="hbar-fill" style="width:19%;background:var(--c-gray);"></div></div><div class="hbar-val">677k</div></div>
-        <div class="hbar-row"><div class="hbar-label">Japan</div><div class="hbar-track"><div class="hbar-fill" style="width:18%;background:var(--c-blue);"></div></div><div class="hbar-val">658k</div></div>
+        <div class="col-title">Partie 4 — Pourquoi LogReg &gt; RandomForest ?</div>
+        <ul>
+          <li>Données <strong>très creuses</strong> après OHE (milliers de labels/pays encodés). La régression logistique gère bien les espaces sparse.</li>
+          <li>Le RandomForest divise les features une par une à chaque nœud → moins efficace sur des features très creuses.</li>
+          <li>LogReg + régularisation L2 → meilleure généralisation sur les classes rares.</li>
+          <li>Pour la <strong>classification binaire</strong> avec des features catégorielles dominantes, LogReg est souvent optimal.</li>
+        </ul>
+        <div class="hbox" style="margin-top:6px;">
+          LogReg = <strong>interprétable + régularisé + efficace sur sparse</strong>. Les coefficients donnent directement le sens de chaque variable.
+        </div>
       </div>
       <div class="col">
-        <div class="col-title">Angle B — Blocs culturels</div>
-        <div class="hbar-row"><div class="hbar-label">Anglophone</div><div class="hbar-track"><div class="hbar-fill" style="width:100%;background:var(--c-blue);"></div></div><div class="hbar-val">6.4M</div></div>
-        <div class="hbar-row"><div class="hbar-label">Germanique</div><div class="hbar-track"><div class="hbar-fill" style="width:40%;background:var(--c-purple);"></div></div><div class="hbar-val">2.5M</div></div>
-        <div class="hbar-row"><div class="hbar-label">Latine</div><div class="hbar-track"><div class="hbar-fill" style="width:38%;background:var(--c-orange);"></div></div><div class="hbar-val">2.4M</div></div>
-        <div class="hbar-row"><div class="hbar-label">Europe Est</div><div class="hbar-track"><div class="hbar-fill" style="width:17%;background:var(--c-yellow);"></div></div><div class="hbar-val">1.1M</div></div>
-        <div class="hbar-row"><div class="hbar-label">Asie</div><div class="hbar-track"><div class="hbar-fill" style="width:15%;background:var(--c-red);"></div></div><div class="hbar-val">929k</div></div>
-        <div class="hbar-row"><div class="hbar-label">International</div><div class="hbar-track"><div class="hbar-fill" style="width:11%;background:var(--c-gray);"></div></div><div class="hbar-val">677k</div></div>
+        <div class="col-title">Partie 5 — Pourquoi GBR &gt; RF en classification ?</div>
+        <ul>
+          <li>Dataset <strong>petit</strong> (2 139 releases) → le boosting séquentiel s'adapte mieux aux petits samples.</li>
+          <li>Le <strong>Gradient Boosting</strong> corrige itérativement les erreurs du modèle précédent → précision croissante.</li>
+          <li>Le Random Forest fait la moyenne de 200 arbres indépendants → plus robuste sur gros volumes, mais moins précis sur petits.</li>
+          <li>Pour la <strong>régression</strong>, le RandomForest reste meilleur (R²=0.674 vs 0.643) : la variance des prédictions est mieux capturée en bagging sur ce problème.</li>
+        </ul>
+        <div class="hbox yellow" style="margin-top:6px;">
+          Il n'y a pas de "meilleur modèle universel" — le contexte (taille du dataset, type de features, cible) détermine le choix.
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-</div><!-- /slides -->
-</div><!-- /reveal -->
+<!-- ══════════════════════════════════════════ BACKUP 3 : PIPELINE API DÉTAIL -->
+<section>
+  <h2 style="color:var(--c-gray);">Backup — Pipeline enrichissement API (Partie 5)</h2>
+  <div class="slide-body">
+    <div class="cols">
+      <div class="col">
+        <div class="col-title">Architecture technique</div>
+        <div class="flow-step">
+          <div class="flow-box">target_df (vinyls ciblés)</div>
+          <div class="flow-note">filtré depuis work_df en 5.1</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-arrow" style="margin-left:8px;">↓</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-box">Vérification cache .pkl</div>
+          <div class="flow-note">reprend là où ça s'est arrêté</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-arrow" style="margin-left:8px;">↓</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-box">API Discogs /releases/{id}</div>
+          <div class="flow-note">1 req/sec · rate limiting CGU</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-arrow" style="margin-left:8px;">↓</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-box">ThreadPoolExecutor</div>
+          <div class="flow-note">timeout par requête · pas de blocage</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-arrow" style="margin-left:8px;">↓</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-box">Sauvegarde d'urgence</div>
+          <div class="flow-note">signal + atexit → 0 perte de données</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-arrow" style="margin-left:8px;">↓</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-box">discogs_api_cache.pkl</div>
+          <div class="flow-note">312 Ko · 2 139 releases</div>
+        </div>
+        <div class="hbox" style="margin-top:6px;">
+          Chaque requête est mise en cache immédiatement. En cas d'interruption (Ctrl+C, timeout, coupure), toutes les données déjà collectées sont sauvegardées.
+        </div>
+      </div>
+      <div class="col">
+        <div class="col-title">Gestion du rate limiting</div>
+        <ul>
+          <li>API Discogs : <strong>60 req/min</strong> pour utilisateurs authentifiés.</li>
+          <li><code>time.sleep(1)</code> entre chaque appel → respect strict des CGU.</li>
+          <li>Temps total de collecte : <strong>~36 minutes</strong> pour 2 139 releases.</li>
+          <li>Clés stockées dans <code>.env.local</code> (exclu du repo GitHub).</li>
+        </ul>
+        <div class="col-title" style="margin-top:8px;">Pourquoi 2 139 releases ?</div>
+        <ul>
+          <li>Sélection des releases vinyl des <strong>labels Electronic ciblés</strong> (URLs Discogs en 5.1).</li>
+          <li>Représentatif du marché collector Electronic : labels indépendants, pressages limités.</li>
+          <li>Suffisant pour entraîner les modèles de Partie 5 (CV 5-fold stable).</li>
+        </ul>
+        <div class="hbox yellow" style="margin-top:6px;">
+          <code>discogs_api_cache.pkl</code> est disponible sur Google Drive — télécharger pour <strong>éviter de relancer les 36 minutes</strong> d'enrichissement API.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div><!-- .slides -->
+</div><!-- .reveal -->
 
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
 <script>
