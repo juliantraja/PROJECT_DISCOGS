@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Discogs Releases — Classification supervisée</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/night.css" />
+  <style>
+    /* ── Override Reveal.js night theme base font (was 40px → clips content) ── */
+    .reveal { font-size: 22px !important; }
+
+    /* ── Variables ── */
+    :root {
+      --c-red:    #e74c3c;
+      --c-blue:   #3498db;
+      --c-green:  #2ecc71;
+      --c-yellow: #f1c40f;
+      --c-purple: #9b59b6;
+      --c-orange: #e67e22;
+      --c-gray:   #7f8c8d;
+      --c-dark:   #1e2a38;
+      --c-panel:  #2c3e50;
+    }
+
+    /* ── CRITICAL: each section is a fixed-size flex column ── */
+    .reveal .slides section {
+      height: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+      display: flex !important;
+      flex-direction: column;
+      padding: 14px 40px 10px;
+      text-align: left;
+    }
+
+    /* Title slide override */
+    .reveal .slides section.title-slide {
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    /* ── Headings ── */
+    .reveal h1 { color: #fff; font-size: 1.8em; margin: 0 0 0.2em; line-height: 1.15; flex-shrink: 0; }
+    .reveal h2 { color: #fff; font-size: 1.0em; margin: 0 0 0.25em; flex-shrink: 0; border-bottom: 1px solid #2c3e50; padding-bottom: 0.2em; }
+    .reveal h3 { color: var(--c-blue); font-size: 0.78em; margin: 0 0 0.2em; flex-shrink: 0; }
+
+    /* ── Body content wrapper that can grow/shrink ── */
+    .slide-body {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow: hidden;
+    }
+
+    /* ── Two-column layout ── */
+    .cols {
+      display: flex;
+      gap: 1em;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .col {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow: hidden;
+    }
+
+    /* ── Typography ── */
+    .reveal p  { font-size: 0.68em; line-height: 1.5; margin: 0; }
+    .reveal ul { font-size: 0.68em; line-height: 1.6; margin: 0; padding-left: 1.2em; }
+    .reveal li { margin-bottom: 2px; }
+    .reveal strong { color: #ecf0f1; }
+    code {
+      background: var(--c-dark);
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 0.88em;
+      color: var(--c-orange);
+    }
+
+    /* Section sub-label */
+    .sub-label {
+      font-size: 0.58em;
+      color: var(--c-gray);
+      margin: 0 0 4px;
+      flex-shrink: 0;
+    }
+
+    /* ── Tables ── */
+    .reveal table {
+      font-size: 0.6em;
+      border-collapse: collapse;
+      width: 100%;
+    }
+    .reveal table th {
+      background: var(--c-panel);
+      color: #ecf0f1;
+      padding: 4px 7px;
+      text-align: left;
+      font-weight: 600;
+    }
+    .reveal table td {
+      padding: 3px 7px;
+      border-bottom: 1px solid #2d3c4a;
+    }
+    .reveal table tr:nth-child(even) td { background: rgba(0,0,0,0.15); }
+
+    /* ── Highlight box ── */
+    .hbox {
+      border-left: 3px solid var(--c-blue);
+      background: rgba(52,152,219,0.1);
+      padding: 5px 9px;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.62em;
+      line-height: 1.45;
+      flex-shrink: 0;
+    }
+    .hbox.green  { border-color: var(--c-green);  background: rgba(46,204,113,0.1); }
+    .hbox.red    { border-color: var(--c-red);    background: rgba(231,76,60,0.1); }
+    .hbox.yellow { border-color: var(--c-yellow); background: rgba(241,196,15,0.1); }
+
+    /* ── Section title inside col ── */
+    .col-title {
+      font-size: 0.65em;
+      font-weight: 700;
+      color: var(--c-blue);
+      margin: 0 0 3px;
+      flex-shrink: 0;
+    }
+    .col-title.red { color: var(--c-red); }
+
+    /* ── Metric cards ── */
+    .metric-row { display: flex; gap: 8px; flex-shrink: 0; }
+    .metric-card {
+      flex: 1;
+      background: var(--c-dark);
+      border-radius: 7px;
+      padding: 8px 10px;
+      text-align: center;
+      border-top: 3px solid var(--c-blue);
+    }
+    .metric-card .val { font-size: 1.3em; font-weight: bold; color: var(--c-green); }
+    .metric-card .lbl { font-size: 0.5em; color: var(--c-gray); margin-top: 1px; line-height: 1.3; }
+    .metric-card.good { border-color: var(--c-green); }
+    .metric-card.warn { border-color: var(--c-yellow); }
+    .metric-card.bad  { border-color: var(--c-red); }
+    .metric-card.bad .val  { color: var(--c-red); }
+    .metric-card.warn .val { color: var(--c-yellow); }
+
+    /* ── Mini bar chart (feature importance) ── */
+    .fi-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.6em;
+      line-height: 1.3;
+    }
+    .fi-label {
+      flex: 0 0 140px;
+      text-align: right;
+      color: #bdc3c7;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .fi-bar {
+      height: 12px;
+      border-radius: 2px;
+      background: var(--c-blue);
+      flex-shrink: 0;
+    }
+    .fi-val { color: #ecf0f1; font-weight: 600; white-space: nowrap; }
+
+    /* ── Horizontal bar chart (country/format) ── */
+    .hbar-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.58em;
+      margin: 2px 0;
+    }
+    .hbar-label { flex: 0 0 90px; text-align: right; color: #bdc3c7; }
+    .hbar-track { flex: 1; background: var(--c-panel); border-radius: 4px; overflow: hidden; height: 14px; }
+    .hbar-fill  { height: 100%; border-radius: 4px; }
+    .hbar-val   { flex: 0 0 36px; color: #ecf0f1; font-weight: 600; }
+
+    /* ── Cell colors for tables ── */
+    .cm-hi   { background: rgba(46,204,113,0.3) !important; font-weight: bold; }
+    .cm-mid  { background: rgba(241,196,15,0.2) !important; }
+    .cm-lo   { background: rgba(231,76,60,0.15) !important; }
+    .cm-zero { color: #555; }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 10px;
+      font-size: 0.58em;
+      font-weight: bold;
+      margin: 2px;
+    }
+    .b-purple { background: var(--c-purple); color: #fff; }
+    .b-blue   { background: var(--c-blue);   color: #fff; }
+    .b-green  { background: var(--c-green);  color: #fff; }
+
+    /* ── Slide number ── */
+    .snum {
+      flex-shrink: 0;
+      font-size: 0.48em;
+      color: #3d5166;
+      text-align: right;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ══════════════════════════════════════════ SLIDE 1 : TITRE -->
+<section class="title-slide" data-background-gradient="linear-gradient(135deg,#0d1b2a,#1a2a3a)">
+  <div style="font-size:0.52em;color:var(--c-red);letter-spacing:3px;text-transform:uppercase;margin-bottom:0.6em;">
+    Projet — Data Science &amp; Machine Learning · Le Wagon 2026
+  </div>
+  <h1>Discogs Releases</h1>
+  <div style="font-size:0.85em;color:var(--c-blue);font-weight:300;margin-bottom:1em;">
+    Classification supervisée à partir des métadonnées musicales
+  </div>
+  <hr style="border-color:#2c3e50;width:55%;margin:0.6em auto;"/>
+  <div style="font-size:0.52em;color:var(--c-gray);line-height:2.1;">
+    <strong style="color:#ecf0f1;">Source</strong> — Discogs XML Dump (fév. 2026, ~17M releases)<br/>
+    <strong style="color:#ecf0f1;">Axes</strong> — Format de distribution · Région géographique<br/>
+    <strong style="color:#ecf0f1;">Modèles</strong> — Logistic Regression · Random Forest
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════ SLIDE 2 : CONTEXTE -->
+<section>
+  <h2>Contexte &amp; objectifs</h2>
+  <div class="slide-body">
+    <div class="hbox">
+      <strong>Discogs</strong> — plus grande BDD de musique physique &amp; numérique au monde.
+      1 ligne = 1 <strong>pressage individuel</strong> (vinyl, CD, fichier…) avec ses métadonnées complètes.
+    </div>
+    <div class="cols">
+      <div class="col">
+        <div class="col-title">Dataset</div>
+        <ul>
+          <li><strong>Source</strong> : dump XML public Discogs (01/02/2026)</li>
+          <li><strong>Volume</strong> : ~17 millions de releases, 45 colonnes</li>
+          <li><strong>Granularité</strong> : 1 ligne = 1 pressage individuel</li>
+          <li><strong>Parsing</strong> : streaming XML → CSV (~17M lignes)</li>
+        </ul>
+        <div class="hbox green" style="margin-top:auto;">
+          <strong>Cas d'usage</strong> : aider un label à anticiper le format dominant d'une sortie
+          et détecter l'origine géographique d'une release peu documentée.
+        </div>
+      </div>
+      <div class="col">
+        <div class="col-title">Deux axes de modélisation</div>
+        <table>
+          <tr><th></th><th>Axe 1</th><th>Axe 2</th></tr>
+          <tr><td>Question</td><td>Quel <strong>format</strong> ?</td><td>D'où vient-elle ?</td></tr>
+          <tr><td>Cible</td><td><code>format_category</code></td><td><code>region_a / b</code></td></tr>
+          <tr><td>Classes</td><td>5 (Vinyl, CD…)</td><td>6 (pays ou blocs)</td></tr>
+          <tr><td>Couverture</td><td>~99.8 %</td><td>74–98 %</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="snum">2 / 10</div>
+</section>
+
+<!-- ══════════════════════════════════════════ SLIDE 3 : DONNÉES -->
+<section>
+  <h2>Source de données &amp; extraction</h2>
+  <div class="slide-body">
+    <div class="cols">
+      <div class="col">
+        <div class="col-title">Pourquoi le dump XML plutôt que l'API ?</div>
+        <ul>
+          <li>Couverture <strong>exhaustive</strong> (~17M releases vs limites de débit API)</li>
+          <li>Démarche <strong>reproductible</strong> : même snapshot = mêmes résultats</li>
+          <li>Parsing en <strong>mode streaming</strong> sans tout charger en mémoire</li>
+          <li>Export en CSV plat compatible <code>pandas</code></li>
+        </ul>
+        <div class="hbox" style="margin-top:4px;">
+          <strong>Pipeline :</strong> XML.gz → parsing streaming → normalisation (séparateur <code>|</code>) → CSV (17M lignes, 45 col)
+        </div>
+      </div>
+      <div class="col">
+        <div class="col-title">Top formats dans le catalogue brut</div>
+        <div class="hbar-row">
+          <div class="hbar-label">Vinyl</div>
+          <div class="hbar-track"><div class="hbar-fill" style="width:80%;background:var(--c-purple);"></div></div>
+          <div class="hbar-val">6.5M</div>
+        </div>
+        <div class="hbar-row">
+          <div class="hbar-label">CD</div>
+          <div class="hbar-track"><div class="hbar-fill" style="width:55%;background:var(--c-blue);"></div></div>
+          <div class="hbar-val">4.1M</div>
+        </div>
+        <div class="hbar-row">
+          <div class="hbar-label">File (Digital)</div>
+          <div class="hbar-track"><div class="hbar-fill" style="width:25%;background:var(--c-green);"></div></div>
+          <div class="hbar-val">1.7M</div>
+        </div>
+        <div class="hbar-row">
+          <div class="hbar-label">Cassette</div>
+          <div class="hbar-track"><div class="hbar-fill" style="width:18%;background:var(--c-orange);"></div></div>
+          <div class="hbar-val">1.2M</div>
+        </div>
+        <div class="hbar-row">
+          <div class="hbar-label">CDr</div>
+          <div class="hbar-track"><div class="hbar-fill" style="width:10%;background:var(--c-gray);"></div></div>
+          <div class="hbar-val">599k</div>
+        </div>
+        <div class="hbar-row">
+          <div class="hbar-label">Shellac</div>
+          <div class="hbar-track"><div class="hbar-fill" style="width:6%;background:var(--c-gray);"></div></div>
+          <div class="hbar-val">326k</div>
+        </div>
+        <p style="color:var(--c-gray);font-size:0.52em;margin-top:4px;">Avant consolidation (CDr→CD, Shellac→Vinyl, 8-Track→Cassette…)</p>
+      </div>
+    </div>
+  </div>
+  <div class="snum">3 / 10</div>
+</section>
+
+<!-- ══════════════════════════════════════════ SLIDE 4 : EDA -->
+<section>
+  <h2>Qualité des données — EDA</h2>
+  <div class="slide-body">
+    <div class="cols">
+      <div class="col">
+        <div class="col-title">Valeurs manquantes (clés)</div>
+        <div class="hbar-row">
+          <div class="hbar-label">styles</div>
+          <div class="hbar-track"><div class="hbar-fill" style="width:75%;background:var(--c-red);"></div></div>
+          <div class="hbar-val">15.0 %</div>
+        </div>
+        <div class="hbar-row">
+          <div class="hbar-label">released_year</div>
+          <div class="hbar-track"><div class="hbar-fill" style="width:62%;background:var(--c-red);"></div></div>
+          <div class="hbar-val">12.5 %</div>
+        </div>
+        <div class="hbar-row">
+          <div class="hbar-label">format_desc.</div>
+          <div class="hbar-track"><div class="hbar-fill" style="width:14%;background:var(--c-yellow);"></div></div>
+          <div class="hbar-val">2.8 %</div>
+        </div>
+        <div class="hbar-row">
+          <div class="hbar-label">country</div>
+          <div class="hbar-track"><div class="hbar-fill" style="width:13%;background:var(--c-yellow);"></div></div>
+          <div class="hbar-val">2.7 %</div>
+        </div>
+        <div class="hbar-row">
+          <div class="hbar-label">genres / IDs</div>
+          <div class="hbar-track"><div class="hbar-fill" style="width:1%;background:var(--c-green);"></div></div>
+          <div class="hbar-val">0.0 %</div>
+        </div>
+        <p style="color:var(--c-gray);font-size:0.52em;margin-top:4px;">15M lignes · 0 doublon · période 1900–2025</p>
+      </div>
+      <div class="col">
+        <div class="col-title">Top genres &amp; pays de pressage</div>
+        <table>
+          <tr><th>Genre</th><th>N</th><th>Pays</th><th>N</th></tr>
+          <tr><td>Rock</td><td>3.2M</td><td>US</td><td>3.6M</td></tr>
+          <tr><td>Electronic</td><td>2.8M</td><td>UK</td><td>1.8M</td></tr>
+          <tr><td>Pop</td><td>1.0M</td><td>Germany</td><td>1.2M</td></tr>
+          <tr><td>Folk / World</td><td>1.0M</td><td>France</td><td>723k</td></tr>
+          <tr><td>Classical</td><td>694k</td><td>Japan</td><td>658k</td></tr>
+        </table>
+        <div class="hbox yellow" style="margin-top:4px;">
+          <strong>Note :</strong> <code>styles</code> manquant pour 15 % des releases
+          → imputation <em>most_frequent</em> dans le pipeline sklearn.
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="snum">4 / 10</div>
+</section>
+
+<!-- ══════════════════════════════════════════ SLIDE 5 : MÉTHODOLOGIE -->
+<section>
+  <h2>Cadrage méthodologique &amp; pipeline</h2>
+  <div class="slide-body">
+    <div class="cols">
+      <div class="col">
+        <div class="col-title">Pourquoi la classification supervisée ?</div>
+        <ul>
+          <li>Les cibles prennent des <strong>valeurs discrètes &amp; finies</strong> (5 ou 6 classes)</li>
+          <li>On cherche à <em>affecter une catégorie</em>, pas prédire un chiffre continu</li>
+          <li>Métrique : <strong>Balanced Accuracy</strong> — compense le déséquilibre des classes</li>
+        </ul>
+        <div class="col-title" style="margin-top:6px;">Protocole</div>
+        <ul>
+          <li>Split stratifié <strong>80 / 20</strong> (<code>random_state=42</code>)</li>
+          <li>Échantillon de <strong>1M releases</strong> pour l'entraînement</li>
+          <li>Baseline → Logistic Regression → Random Forest</li>
+        </ul>
+        <div class="hbox" style="margin-top:auto;">
+          <strong>Pipeline sklearn</strong> : <code>ColumnTransformer</code> (OHE + imputation médiane)
+          encapsulé dans un <code>Pipeline</code> — pas de data leakage, reproductible.
+        </div>
+      </div>
+      <div class="col">
+        <div class="col-title">Features — Axe 1 (format)</div>
+        <table>
+          <tr><th>Feature</th><th>Type</th><th>Signal</th></tr>
+          <tr><td><code>vinyl_size</code></td><td>catég.</td><td style="color:var(--c-green);">Très élevé</td></tr>
+          <tr><td><code>release_type</code></td><td>catég.</td><td style="color:var(--c-green);">Très élevé</td></tr>
+          <tr><td><code>genres</code></td><td>catég.</td><td style="color:var(--c-yellow);">Élevé</td></tr>
+          <tr><td><code>style_first</code></td><td>catég.</td><td style="color:var(--c-yellow);">Élevé</td></tr>
+          <tr><td><code>track_count</code></td><td>num.</td><td style="color:var(--c-orange);">Moyen</td></tr>
+          <tr><td><code>is_reissue / promo</code></td><td>binaire</td><td style="color:var(--c-gray);">Faible</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="snum">5 / 10</div>
+</section>
+
+<!-- ══════════════════════════════════════════ SLIDE 6 : RÉSULTATS FORMAT -->
+<section>
+  <h2>Résultats — Prédiction du format</h2>
+  <p class="sub-label">Tâche : <code>format_category</code> — 5 classes · 1M releases · test = 200k</p>
+  <div class="slide-body">
+    <div class="metric-row">
+      <div class="metric-card bad">
+        <div class="val">0.200</div>
+        <div class="lbl">Balanced Acc.<br/>Baseline (majorité)</div>
+      </div>
+      <div class="metric-card warn">
+        <div class="val">0.722</div>
+        <div class="lbl">Balanced Acc.<br/>Logistic Regression</div>
+      </div>
+      <div class="metric-card good">
+        <div class="val">0.693</div>
+        <div class="lbl">Balanced Acc.<br/>Random Forest</div>
+      </div>
+    </div>
+    <div class="cols">
+      <div class="col">
+        <div class="col-title">Comparaison des modèles</div>
+        <table>
+          <tr><th>Modèle</th><th>Accuracy</th><th>Macro-F1</th><th>Bal. Acc.</th></tr>
+          <tr><td>Baseline</td><td>0.470</td><td>0.128</td><td class="cm-lo">0.200</td></tr>
+          <tr><td>Logistic Reg.</td><td>0.769</td><td>0.599</td><td class="cm-hi">0.722</td></tr>
+          <tr><td>Random Forest</td><td>0.740</td><td>0.564</td><td style="color:var(--c-yellow);">0.693</td></tr>
+        </table>
+      </div>
+      <div class="col">
+        <div class="col-title">Résultats par classe (Random Forest)</div>
+        <table>
+          <tr><th>Classe</th><th>Précision</th><th>Rappel</th><th>F1</th></tr>
+          <tr><td>Vinyl</td><td class="cm-hi">1.00</td><td class="cm-hi">0.93</td><td class="cm-hi">0.96</td></tr>
+          <tr><td>Digital</td><td>0.61</td><td class="cm-hi">0.81</td><td>0.69</td></tr>
+          <tr><td>CD</td><td>0.80</td><td class="cm-mid">0.50</td><td>0.62</td></tr>
+          <tr><td>Cassette</td><td class="cm-lo">0.30</td><td>0.50</td><td class="cm-lo">0.37</td></tr>
+          <tr><td>Video</td><td class="cm-lo">0.10</td><td>0.73</td><td class="cm-lo">0.17</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="hbox green">
+      Vinyl très bien classé (F1 = 0.96). Video et Cassette difficiles : classes minoritaires au signal ambigu.
+      La LR surpasse le RF en balanced accuracy — meilleure généralisation sur les classes rares.
+    </div>
+  </div>
+  <div class="snum">6 / 10</div>
+</section>
+
+<!-- ══════════════════════════════════════════ SLIDE 7 : FEATURE IMPORTANCES -->
+<section>
+  <h2>Interprétation — Feature importances (RF)</h2>
+  <div class="slide-body">
+    <div class="cols">
+      <div class="col">
+        <div class="col-title">Top 10 variables</div>
+        <div class="fi-row"><span class="fi-label">vinyl_size_Unknown</span><div class="fi-bar" style="width:110px;"></div><span class="fi-val">12.1 %</span></div>
+        <div class="fi-row"><span class="fi-label">has_vinyl_size</span><div class="fi-bar" style="width:95px;"></div><span class="fi-val">10.5 %</span></div>
+        <div class="fi-row"><span class="fi-label">vinyl_size_7"</span><div class="fi-bar" style="width:72px;"></div><span class="fi-val">7.8 %</span></div>
+        <div class="fi-row"><span class="fi-label">release_type_LP</span><div class="fi-bar" style="width:68px;"></div><span class="fi-val">7.4 %</span></div>
+        <div class="fi-row"><span class="fi-label">genres_Electronic</span><div class="fi-bar" style="width:67px;"></div><span class="fi-val">7.3 %</span></div>
+        <div class="fi-row"><span class="fi-label">release_type_Album</span><div class="fi-bar" style="width:62px;"></div><span class="fi-val">6.7 %</span></div>
+        <div class="fi-row"><span class="fi-label">release_type_Unknown</span><div class="fi-bar" style="width:58px;"></div><span class="fi-val">6.4 %</span></div>
+        <div class="fi-row"><span class="fi-label">track_count</span><div class="fi-bar" style="width:58px;"></div><span class="fi-val">6.4 %</span></div>
+        <div class="fi-row"><span class="fi-label">vinyl_size_12"</span><div class="fi-bar" style="width:36px;"></div><span class="fi-val">3.9 %</span></div>
+        <div class="fi-row"><span class="fi-label">release_type_EP</span><div class="fi-bar" style="width:16px;"></div><span class="fi-val">1.8 %</span></div>
+      </div>
+      <div class="col">
+        <div class="col-title">Interprétations clés</div>
+        <ul>
+          <li><code>vinyl_size</code> + <code>has_vinyl_size</code> = <strong>~23 %</strong> → la taille physique est le signal le plus discriminant</li>
+          <li><code>release_type=LP</code> → Vinyl ou CD quasi certain</li>
+          <li><code>vinyl_size=Unknown</code> + <code>release_type=Unknown</code> → souvent Digital</li>
+          <li><code>genres=Electronic</code> → fort signal Vinyl (marché historique)</li>
+          <li><code>track_count</code> joue : EP (&lt;6 pistes) vs LP (≥8 pistes)</li>
+        </ul>
+        <div class="hbox" style="margin-top:auto;">
+          <strong>Exemple :</strong><br/>
+          <code>LP</code> + <code>Electronic</code> + <code>Deep House</code> + <code>UK</code> → <strong>Vinyl</strong><br/>
+          <code>Unknown</code> + <code>Electronic</code> + pas de taille physique → <strong>Digital</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="snum">7 / 10</div>
+</section>
+
+<!-- ══════════════════════════════════════════ SLIDE 8 : GÉO -->
+<section>
+  <h2>Extension — Prédiction géographique</h2>
+  <p class="sub-label">Axe 2 : prédire l'origine d'une release <em>sans utiliser le champ <code>country</code></em></p>
+  <div class="slide-body">
+    <div class="cols">
+      <div class="col">
+        <div class="col-title">Deux angles de prédiction</div>
+        <table>
+          <tr><th></th><th>Angle A</th><th>Angle B</th></tr>
+          <tr><td>Cible</td><td>Marchés nationaux</td><td>Blocs culturels</td></tr>
+          <tr><td>Classes</td><td>UK/US/Germany/France/Japan/Intl</td><td>Anglophone/Germanique/Latine/EE/Asie/Intl</td></tr>
+          <tr><td>Couverture</td><td>~736k releases</td><td>~982k releases</td></tr>
+        </table>
+        <div class="hbox yellow" style="margin-top:6px;">
+          <strong>Hypothèse :</strong> les blocs culturels (Angle B) sont plus séparables — ils partagent des traits musicaux cohérents. Le signal géo est structurellement plus faible que le signal de format.
+        </div>
+      </div>
+      <div class="col">
+        <div class="col-title">Features &amp; signaux géographiques attendus</div>
+        <ul>
+          <li>Mêmes features qu'Axe 1, <strong>sauf</strong> <code>country</code> (c'est la cible)</li>
+          <li><code>format_category</code> + <code>decade</code> ajoutés (signal temporel fort)</li>
+        </ul>
+        <div class="col-title" style="margin-top:6px;">Exemples concrets</div>
+        <ul>
+          <li><code>Electronic</code> + <code>1990s</code> + <code>Vinyl</code> → <strong>UK / Anglophone</strong></li>
+          <li><code>J-Pop</code> + <code>CD</code> + <code>2000s</code> → <strong>Asie</strong></li>
+          <li><code>Schlager</code> + <code>1970s</code> → <strong>Germanique</strong></li>
+          <li><code>CD</code> + <code>1990s</code> → <strong>Japan</strong> (boom CD 90s)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="snum">8 / 10</div>
+</section>
+
+<!-- ══════════════════════════════════════════ SLIDE 9 : LIMITES -->
+<section>
+  <h2>Limites &amp; points de vigilance</h2>
+  <div class="slide-body">
+    <div class="cols">
+      <div class="col">
+        <div class="col-title red">Axe 1 — Format</div>
+        <ul>
+          <li><strong>Snapshot catalogue</strong> : photo à une date, pas d'évolution en temps réel</li>
+          <li><strong>Déséquilibre de classes</strong> : Vinyl ~47 % vs Video ~1 % → classes minoritaires mal prédites</li>
+          <li><strong>Signal quasi-circulaire</strong> : <code>vinyl_size</code> / <code>release_type</code> extraits du même champ source que la cible</li>
+          <li><strong>Simplification multi-label</strong> : seul le 1er style est utilisé</li>
+          <li><strong>Format "Autre" exclu</strong> : Box Set, All Media (&lt;0.3 % du catalogue)</li>
+        </ul>
+      </div>
+      <div class="col">
+        <div class="col-title red">Axe 2 — Géographie</div>
+        <ul>
+          <li><strong>Signal faible par construction</strong> : inférer l'origine sans <code>country</code> est une contrainte forte</li>
+          <li><strong>Blocs subjectifs</strong> : Belgique, Suisse… à la frontière de deux blocs</li>
+          <li><strong>Pays rares exclus</strong> : Angle A exclut ~26 % du catalogue</li>
+          <li><strong>Classe "International" hétérogène</strong> : Europe, Benelux, Worldwide → fourre-tout</li>
+          <li><strong>Doublons de master</strong> : une œuvre = potentiellement des dizaines de lignes</li>
+        </ul>
+      </div>
+    </div>
+    <div class="hbox red">
+      Ces limites sont connues et documentées. Elles bornent la portée des résultats
+      et ouvrent des axes d'amélioration concrets.
+    </div>
+  </div>
+  <div class="snum">9 / 10</div>
+</section>
+
+<!-- ══════════════════════════════════════════ SLIDE 10 : NEXT STEPS -->
+<section>
+  <h2>Prochaines étapes</h2>
+  <div class="slide-body">
+    <div class="cols">
+      <div class="col">
+        <div class="col-title">Modélisation</div>
+        <ul>
+          <li>Comparer avec <strong>XGBoost / LightGBM</strong> pour les classes minoritaires</li>
+          <li>Encodage <strong>multi-label</strong> pour <code>genres</code> et <code>styles</code> (TF-IDF)</li>
+          <li>Ajouter <code>label_names</code> comme feature (certains labels = format exclusif)</li>
+        </ul>
+        <div class="col-title" style="margin-top:6px;">Pipeline &amp; données</div>
+        <ul>
+          <li><strong>Validation temporelle</strong> : entraîner sur &lt;2020, tester sur ≥2020</li>
+          <li>Intégrer les données <strong>communautaires</strong> Discogs (<code>community_want</code>)</li>
+          <li>Déduplication par master pour réduire les biais de sur-représentation</li>
+        </ul>
+      </div>
+      <div class="col" style="justify-content:center; align-items:center; text-align:center; gap:16px;">
+        <div class="hbox green" style="text-align:left; align-self:stretch;">
+          <strong>Takeaway :</strong> les métadonnées musicales de Discogs portent un signal prédictif
+          clair sur le format de distribution (Balanced Acc. 0.72 vs 0.20 baseline).
+          La prédiction géographique reste un défi ouvert et stimulant.
+        </div>
+        <div>
+          <span class="badge b-purple">Vinyl · CD · Digital · Cassette · Video</span><br/>
+          <span class="badge b-blue" style="margin-top:4px;">UK · US · Germany · France · Japan</span><br/>
+          <span class="badge b-green" style="margin-top:4px;">sklearn · pandas · plotly</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="snum">10 / 10</div>
+</section>
+
+<!-- ══════════════════════════════════════════ BACKUP 1 : DISTRIBUTION FORMATS -->
+<section>
+  <h2 style="color:var(--c-gray);">Backup — Distribution formats (catalogue complet)</h2>
+  <div class="slide-body">
+    <div class="cols">
+      <div class="col">
+        <table>
+          <tr><th>Catégorie</th><th>Releases</th><th>%</th></tr>
+          <tr><td>Vinyl</td><td>7.0M</td><td class="cm-hi">46.8 %</td></tr>
+          <tr><td>CD</td><td>4.8M</td><td>32.3 %</td></tr>
+          <tr><td>Digital</td><td>1.7M</td><td>11.6 %</td></tr>
+          <tr><td>Cassette</td><td>1.2M</td><td>8.2 %</td></tr>
+          <tr><td>Video</td><td>138k</td><td class="cm-lo">0.9 %</td></tr>
+          <tr><td>Autre (exclu)</td><td>27k</td><td class="cm-zero">0.2 %</td></tr>
+        </table>
+        <p style="color:var(--c-gray);font-size:0.52em;margin-top:6px;">
+          Après consolidation FORMAT_MAP (CDr→CD, Shellac→Vinyl, 8-Track→Cassette, DVD/VHS→Video).
+          Réduction "Autre" : 1.65M → 27k (−96 %).
+        </p>
+      </div>
+      <div class="col">
+        <div class="hbar-row">
+          <div class="hbar-label">Vinyl</div>
+          <div class="hbar-track"><div class="hbar-fill" style="width:47%;background:var(--c-purple);"></div></div>
+          <div class="hbar-val">47 %</div>
+        </div>
+        <div class="hbar-row">
+          <div class="hbar-label">CD</div>
+          <div class="hbar-track"><div class="hbar-fill" style="width:32%;background:var(--c-blue);"></div></div>
+          <div class="hbar-val">32 %</div>
+        </div>
+        <div class="hbar-row">
+          <div class="hbar-label">Digital</div>
+          <div class="hbar-track"><div class="hbar-fill" style="width:12%;background:var(--c-green);"></div></div>
+          <div class="hbar-val">12 %</div>
+        </div>
+        <div class="hbar-row">
+          <div class="hbar-label">Cassette</div>
+          <div class="hbar-track"><div class="hbar-fill" style="width:8%;background:var(--c-orange);"></div></div>
+          <div class="hbar-val">8 %</div>
+        </div>
+        <div class="hbar-row">
+          <div class="hbar-label">Video</div>
+          <div class="hbar-track"><div class="hbar-fill" style="width:1%;background:var(--c-red);min-width:6px;"></div></div>
+          <div class="hbar-val">1 %</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════ BACKUP 2 : VARIABLES DÉRIVÉES -->
+<section>
+  <h2 style="color:var(--c-gray);">Backup — Variables dérivées</h2>
+  <div class="slide-body">
+    <table>
+      <tr><th>Variable</th><th>Source</th><th>Description</th></tr>
+      <tr><td><code>style_count</code></td><td><code>styles</code></td><td>Nombre de styles détectés</td></tr>
+      <tr><td><code>style_first</code></td><td><code>styles</code></td><td>Premier style (réduit la cardinalité)</td></tr>
+      <tr><td><code>format_category</code></td><td><code>format_names</code></td><td>Catégorie format — 5 classes (cible Axe 1)</td></tr>
+      <tr><td><code>release_type</code></td><td><code>format_descriptions</code></td><td>LP / EP / Single / Compilation / Maxi-Single…</td></tr>
+      <tr><td><code>vinyl_size</code></td><td><code>format_descriptions</code></td><td>12" / 7" / 10" / Unknown</td></tr>
+      <tr><td><code>has_vinyl_size</code></td><td><code>vinyl_size</code></td><td>1 si taille renseignée (quasi exclusivement Vinyl)</td></tr>
+      <tr><td><code>is_limited</code></td><td><code>format_descriptions</code></td><td>1 si Limited Edition</td></tr>
+      <tr><td><code>is_promo</code></td><td><code>format_descriptions</code></td><td>1 si copie promotionnelle</td></tr>
+      <tr><td><code>is_reissue</code></td><td><code>format_descriptions</code></td><td>1 si Reissue ou Repress</td></tr>
+      <tr><td><code>decade</code></td><td><code>released_year</code></td><td>1980s, 1990s, 2000s…</td></tr>
+      <tr><td><code>region_a</code></td><td><code>country</code></td><td>Top 5 marchés nationaux + International</td></tr>
+      <tr><td><code>region_b</code></td><td><code>country</code></td><td>Blocs culturels + International</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════ BACKUP 3 : DISTRIBUTION GÉO -->
+<section>
+  <h2 style="color:var(--c-gray);">Backup — Distribution géographique</h2>
+  <div class="slide-body">
+    <div class="cols">
+      <div class="col">
+        <div class="col-title">Angle A — Top 5 marchés nationaux</div>
+        <div class="hbar-row"><div class="hbar-label">US</div><div class="hbar-track"><div class="hbar-fill" style="width:100%;background:var(--c-blue);"></div></div><div class="hbar-val">3.6M</div></div>
+        <div class="hbar-row"><div class="hbar-label">UK</div><div class="hbar-track"><div class="hbar-fill" style="width:50%;background:var(--c-blue);"></div></div><div class="hbar-val">1.8M</div></div>
+        <div class="hbar-row"><div class="hbar-label">Germany</div><div class="hbar-track"><div class="hbar-fill" style="width:34%;background:var(--c-blue);"></div></div><div class="hbar-val">1.2M</div></div>
+        <div class="hbar-row"><div class="hbar-label">France</div><div class="hbar-track"><div class="hbar-fill" style="width:20%;background:var(--c-blue);"></div></div><div class="hbar-val">723k</div></div>
+        <div class="hbar-row"><div class="hbar-label">Intl</div><div class="hbar-track"><div class="hbar-fill" style="width:19%;background:var(--c-gray);"></div></div><div class="hbar-val">677k</div></div>
+        <div class="hbar-row"><div class="hbar-label">Japan</div><div class="hbar-track"><div class="hbar-fill" style="width:18%;background:var(--c-blue);"></div></div><div class="hbar-val">658k</div></div>
+      </div>
+      <div class="col">
+        <div class="col-title">Angle B — Blocs culturels</div>
+        <div class="hbar-row"><div class="hbar-label">Anglophone</div><div class="hbar-track"><div class="hbar-fill" style="width:100%;background:var(--c-blue);"></div></div><div class="hbar-val">6.4M</div></div>
+        <div class="hbar-row"><div class="hbar-label">Germanique</div><div class="hbar-track"><div class="hbar-fill" style="width:40%;background:var(--c-purple);"></div></div><div class="hbar-val">2.5M</div></div>
+        <div class="hbar-row"><div class="hbar-label">Latine</div><div class="hbar-track"><div class="hbar-fill" style="width:38%;background:var(--c-orange);"></div></div><div class="hbar-val">2.4M</div></div>
+        <div class="hbar-row"><div class="hbar-label">Europe Est</div><div class="hbar-track"><div class="hbar-fill" style="width:17%;background:var(--c-yellow);"></div></div><div class="hbar-val">1.1M</div></div>
+        <div class="hbar-row"><div class="hbar-label">Asie</div><div class="hbar-track"><div class="hbar-fill" style="width:15%;background:var(--c-red);"></div></div><div class="hbar-val">929k</div></div>
+        <div class="hbar-row"><div class="hbar-label">International</div><div class="hbar-track"><div class="hbar-fill" style="width:11%;background:var(--c-gray);"></div></div><div class="hbar-val">677k</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /slides -->
+</div><!-- /reveal -->
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    slideNumber: false,
+    transition: 'slide',
+    transitionSpeed: 'fast',
+    controls: true,
+    progress: true,
+    center: false,
+    width: 1100,
+    height: 660,
+    margin: 0.04,
+    minScale: 0.2,
+    maxScale: 2.0,
+  });
+</script>
+</body>
+</html>

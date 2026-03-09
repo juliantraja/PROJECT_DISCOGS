@@ -1,0 +1,30 @@
+# ── Large data files (available on Google Drive) ──────────────────────────────
+data/raw/
+data/interim/
+data/processed/
+
+# ── Secrets ───────────────────────────────────────────────────────────────────
+.env.local
+references/secrets/
+
+# ── Internal project guidelines ───────────────────────────────────────────────
+references/project-guidelines/
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# ── Jupyter ───────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+*.ipynb.bak
+
+# ── macOS ─────────────────────────────────────────────────────────────────────
+.DS_Store
